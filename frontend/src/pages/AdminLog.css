@@ -1,0 +1,119 @@
+/* Flower Image Placement */
+.adminlog-container {
+  position: relative;  /* REQUIRED */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+}
+
+
+
+.adminlog-container .signup-flower-container {
+  position: absolute;
+  bottom:-200px;
+  left: -800px;
+  z-index: 1;
+}
+
+
+.adminlog-container .signup-flower-img {
+  width: 800px;      /* adjust size */
+  height: auto;
+  opacity: 0.9;      /* slight transparency for subtle look */
+  transition: transform 0.4s ease;
+}
+
+/* optional subtle hover effect */
+.adminlog-container .signup-flower-img:hover {
+  transform: scale(1.05);
+}
+
+
+/* New right-side flower */
+.adminlog-container .signup-flower-container.right-flower {
+  left: auto;        /* override left */
+  right: -800px;     /* position on right side */
+  bottom: -200px;    /* match bottom positioning */
+  z-index: 1;
+  transform: scaleX(-1);
+}
+
+/* Only for AdminLog */
+.adminlog-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+/* Move the login box (and everything inside it) manually */
+.adminlog-container .subframe-container {
+  position: relative;
+  top: 90px;      /* moves it down */
+  left:40px;    /* moves it right */
+  transform: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.adminlog-container .login-card {
+  width: 420px;    /* adjust width */
+  height: auto;    /* or set to fixed height */
+}
+
+/* --- AdminLog Unique Styles --- */
+
+/* Logo placement (left side) */
+.adminlog-logo {
+  position: absolute;
+  top: 30px;       /* adjust vertical placement */
+  left: -500px;      /* adjust horizontal placement */
+  width: 480px;    /* logo size */
+  height: auto;
+  z-index: 20;     /* ensures it stays above background */
+  cursor: pointer;
+}
+
+
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.adminlog-container .login-card h2 {
+  margin: 120px 0 50px 0; 
+  
+}
+
+.adminlog-container .subframe-img {
+ width: 550px;        /* keep the width you like */
+  height: auto;        /* keeps aspect ratio natural */
+   object-fit: fill;   /* crops the image instead of squishing */
+  object-position: center;      /* keeps proportions */
+  position: relative;
+  top: 10px;           /* move vertically */
+  left:-10px;          /* move horizontally */
+  z-index: 1;          /* keeps it behind your login inputs if needed */
+  object-fit: contain; /* avoids image distortion */
+}
+
+/* Scoped spacing for inputs and button */
+.adminlog-container .login-card .input-box {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 40px; /* space between email/password and others */
+}
+
+.adminlog-container .login-card .login-btn {
+  margin-top: 70px; /* space above the login button */
+}

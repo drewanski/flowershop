@@ -1,0 +1,454 @@
+.landing::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(246, 233, 219, 0.4); 
+  z-index: 0;
+}
+
+.landing {
+  position: relative;
+  height: 100vh;       /* Full viewport height */
+  overflow: hidden;    /* Prevent scrolling */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.login-navbar
+.login-navbar {
+  position: relative; /* or fixed if you want it to stay on top while scrolling */
+  z-index: 9999;
+}
+.login-car,
+.login-flower-container,
+.subframe-container {
+  position: relative;
+  z-index: 1;
+}
+
+.login-navbar {
+  width: 100%;
+  display: flex;
+  align-items: center;    
+  justify-content: flex-start;
+  gap: 20px;                
+  padding: 20px 40px;
+  background: transparent;
+}
+
+.login-logo {
+  height: 150px;           
+}
+
+.login-nav-links {
+  list-style: none;
+  display: flex;
+  gap: 40px;                 
+  padding: 0;
+  margin: 0;
+}
+
+.login-nav-links li a {
+  text-decoration: none;
+  color: #800000;
+  font-size: 16px;
+  font-weight: 400;
+  transition: 0.3s;
+}
+
+.login-nav-links li a:hover {
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.login-nav-links li a.login-signup {
+  font-weight: 600;
+}
+
+.login-flower-container {
+  position: absolute;
+  left: -100px;
+  top: 350px;
+  width: 900px;
+  height: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-flower-img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+}
+
+.subframe-container {
+  position: absolute;
+  right: 80px;            
+  top: 150px;            
+  width: 550px;     
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.login-fields {
+  position: relative;
+  top: -45px;
+}
+
+
+.subframe-img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+  position: relative;
+  z-index: 1;
+}
+
+.login-card {
+  position: absolute;
+  top: 10px;          /* vertical position */
+  left: 220px;         /* horizontal reference */
+  width: 75%;
+  max-width: 400px;
+  padding: 40px 30px;
+  background: transparent;
+  border-radius: 20px;
+  font-family: "Poppins", sans-serif;
+  z-index: 2;
+
+  /* Removed transform */
+  transform: none;
+
+  /* Center horizontally without transform */
+  margin-left: -37.5%; /* negative half of width (75%) */
+}
+
+
+.login-card h2 {
+  text-align: left;
+  font-family: "League Spartan", sans-serif;
+  font-size: 50px;
+  font-weight: 700;
+  color: #800000;
+  margin-bottom: 100px;
+}
+
+.landingmain-navbar-icons1 {
+  position: fixed;
+  top: 75px;
+  right: 100px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  z-index: 9999;
+  transition: all 0.3s ease;
+  pointer-events: auto;
+}
+
+.landingmain-navbar-icons1 .navbar-icon   {
+  width: auto;        
+  height: 30px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  pointer-events: auto;
+}
+
+.navbar-icon:hover {
+  transform: scale(1.1);
+}
+
+.input-box {
+  margin-bottom: 30px;
+}
+
+.input-box label {
+  display: block;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.input-box input {
+  width: 100%;
+  padding: 12px 12px 12px 30px;
+  border-radius: 25px;
+  border: 2px solid #ddd;
+  background-color: rgba(143, 143, 143, 0.2);
+  outline: none;
+  font-size: 14px;
+  font-style: italic;
+  font-family: "Poppins", sans-serif;
+  transition: 0.3s;
+}
+
+.input-box input:focus {
+  border-color: #1e90ff;
+  box-shadow: 0 0 5px rgba(30, 144, 255, 0.5);
+  background-color: #fff;
+}
+
+.options {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 20px;
+  align-items: center; 
+}
+
+.options a {
+  text-decoration: none;
+  color: #1e90ff;
+}
+
+.options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "Poppins", sans-serif;
+  color: #333;
+}
+
+.options input[type="checkbox"] {
+  accent-color: #800000;
+  transform: scale(1.1);
+  cursor: pointer;
+}
+
+
+.login-btn,
+.signup-btn {
+  display: block;
+  left: 8px; 
+  position: relative;
+  margin: 0 auto;
+  width:100%;
+  padding: 12px;
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+  font-family: "Poppins", sans-serif;
+  transform: translateX(15px); 
+}
+
+.login-btn {
+  background: #800000;
+  color: #fff;
+  margin-top: 10px;
+}
+
+.login-btn:hover {
+  background: #bf4341;
+  color: #ffffff;
+}
+
+.signup-btn {
+  background: #f1f1f1;
+  color: #333;
+}
+
+.signup-btn:hover {
+  background: #d5dde6;
+  color: #000;
+}
+
+.divider {
+  transform: translateX(20px); 
+  text-align: center;
+  margin: 15px 0;
+  font-size: 14px;
+  color: #aaa;
+  position: relative;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: #ddd;
+}
+
+.divider::before {
+  left: 0;
+}
+
+.divider::after {
+  right: 0;
+}
+
+.signup-text {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 14px;
+  color: #333;
+  font-family: "Poppins", sans-serif;
+  cursor: pointer;
+  transform: translateX(15px);
+}
+
+.signup-link {
+  color: #800000; 
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.signup-link:hover {
+  text-decoration: underline;
+  font-weight: 600;
+font-style: italic;
+  color: #800000;
+}
+
+.image-btn {
+  display: block;        
+  margin: 15px auto 0 auto; 
+  padding: 0;               
+  border: none;
+  border-radius: 50%;       
+  background: transparent;   
+  cursor: pointer;
+  position: relative;       
+  left: -85px;                   
+  margin-left: calc(50% + 15px - 15px);
+  transition: 0.2s ease; 
+}
+
+
+.image-btn img {
+  width: 210px;   
+  height: 50px;
+  object-fit: contain;
+  margin-top: 15px;
+}
+
+.image-btn {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.image-btn:hover {
+  transform: scale(1.05);
+}
+
+.input-box {
+  position: relative;
+}
+
+.toggle-password {
+  position: absolute;
+  right: -15px;
+  top: 25px;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.toggle-password:hover {
+  opacity: 1;
+}
+
+.hidden {
+  display: none;
+}
+
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #ff4d4f;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-family: "Poppins", sans-serif;
+  z-index: 9999;
+  box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+  animation: slideIn 0.3s ease-out;
+}
+
+.toast-close {
+  margin-left: 10px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* Fade-in keyframes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Apply fade-in to main login elements */
+.login-navbar,
+.landingmain-navbar-icons1,
+.login-flower-container
+.subframe-container,
+.login-card {
+  opacity: 0; /* start invisible */
+  animation: fadeIn 1s ease forwards; /* fade in to full opacity */
+}
+
+/* Optional stagger for smoother effect */
+.login-navbar {
+  animation-delay: 0.2s;
+}
+
+.landingmain-navbar-icons1 {
+  animation-delay: 0.4s;
+}
+
+.login-flower-container{
+  animation-delay: 0.6s;
+}
+
+.subframe-container {
+  animation-delay: 0.8s;
+}
+
+.login-card {
+  animation-delay: 1s;
+}
+
+
+.signup-flower-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+/* Fade-in animation */
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 1.5s ease-in-out forwards;
+}
+
+/* Keyframes for smooth fade-in */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Optional styling for the flower image */
+.signup-flower-img {
+  width: 150px;
+  height: auto;
+}

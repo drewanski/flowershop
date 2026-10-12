@@ -1,0 +1,246 @@
+.fade-in-up {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 1s ease-in-out forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+.fade-in-up.navbar {
+  animation-delay: 0.3s;
+}
+
+.fade-in-up.hero-text {
+  animation-delay: 0.6s;
+}
+
+.fade-in-up.hero-img-container {
+  animation-delay: 0.9s;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.landing {
+    height: 100vh;       /* Full viewport height */
+  overflow: hidden;  
+  width: 100%;
+  font-family: 'Poppins', sans-serif;
+  display: flex;
+  flex-direction: column;
+
+}
+.landing::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(246, 233, 219, 0.2); 
+  z-index: 0;
+}
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 20px;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 20px;       /* spacing between buttons */
+  margin-right: 60px; /* shift the whole group to the right */
+}
+
+.nav-buttons button {
+  padding: 10px 30px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  margin-right: 0; 
+}
+
+
+.btn-outline {
+  border: 1px solid #800000;
+  background: transparent;
+  color: #800000;
+}
+
+.btn-solid {
+  border: none;
+  background: #800000;
+  color: white;
+}
+
+.btn-outline {
+  display: inline-block;
+  border: 1px solid #800000;
+  background: transparent;
+  color: #800000;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-outline:hover {
+  background: #800000;
+  color: white;
+  transform: scale(1.10);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+
+.btn-solid {
+  display: inline-block;
+  border: 1px solid transparent;
+  background: #800000;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-solid:hover {
+  border: 1px solid #800000;
+  background: transparent;
+  color: #800000;
+  transform: scale(1.05);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.btn-solid1 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  display: inline-block;
+  border: 1px solid transparent;
+  background: #800000;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  transform: scale(1);
+}
+
+.btn-solid1:hover {
+  border: 1px solid #800000;
+  background: transparent;
+  color: #800000;
+  transform: scale(1.05);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Navbar for Landinglog Page */
+
+.landing-navbar {
+  width: 100%;
+  display: flex;
+  align-items: center;           /* vertical alignment */
+  justify-content: space-between; /* logo-nav left, buttons right */
+  padding: 20px 40px;
+  background: transparent;
+}
+
+.logo-nav-wrapper {
+  display: flex;
+  align-items: center;           /* nav links vertically aligned with logo */
+  gap: 10px;                     /* space between logo and links */
+}
+
+.logo {
+  height: 200px;
+}
+
+.landing-nav-links {
+  list-style: none;
+  display: flex;
+  gap: 30px;
+  margin: 0;
+  padding: 0;
+}
+
+.landing-nav-links li a {
+  text-decoration: none;
+  color: #800000;
+  font-size: 16px;
+  font-weight: 400;
+  transition: 0.3s;
+}
+
+.landing-nav-links li a:hover {
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.landing-nav-links li a.landing-signup {
+  font-weight: 600;
+}
+
+
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  padding: 0 5%;
+}
+
+.hero-text {
+  position: relative;
+  z-index: 2;
+}
+
+
+.hero-img-container {
+  position: absolute;
+  right: -50px;
+  top: -90px;
+  bottom: 0;
+  z-index: 1;
+}
+
+.hero-img-container img {
+  width: 1800px;
+  z-index: 5;
+  height: auto;
+}
+
+.hero-text {
+  margin-top: -400px;
+  display: flex;
+  z-index: 10;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.hero-button {
+  margin-top: 20px;
+}
+
+.hero-text h1 {
+  font-family: 'Gilda Display', serif;
+  font-size: 58px;
+  color: #d0a068;
+  margin-bottom: 20px;
+}
+
+.hero-text p {
+  font-family: 'Poppins', serif;
+  color: #771427;
+  line-height: 0;
+}
+
+
