@@ -1,0 +1,534 @@
+.landingmain-cta-buttons {
+  display: flex;
+  gap: 50px;
+  position: absolute;     
+  top: 530px;            
+  left: 400px;            
+  margin-left: -135px;    
+  z-index: 5; 
+}
+
+.cta-outline-btn {
+  padding: 10px 70px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  border: 1px solid #800000;
+  background: #F8F8F8;
+  color: #800000;
+  transition: all 0.3s ease;
+}
+
+.cta-outline-btn:hover {
+  background: #800000;
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+
+.cta-solid-btn {
+  padding: 10px 70px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: #800000;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.cta-solid-btn:hover {
+  border: 1px solid #800000;
+  background: #F8F8F8;
+  color: #800000;
+  transform: scale(1.05);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.landingmain {
+  position: relative;
+  min-height: 109vh; 
+  width: 100%;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+
+.landingmain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(246, 233, 219, 0.3);
+  z-index: 0;
+}
+
+
+.landingmain-navbar {
+  position: fixed;
+  top: 30px;
+  left: 70px;
+  width: calc(100% - 140px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 15px 40px;
+  background: transparent; 
+  border-radius: 20px;
+  z-index: 1000;
+  transition: background 0.4s ease, backdrop-filter 0.4s ease;
+}
+
+
+.landingmain-logo {
+  position: absolute;
+  right: 40px;
+  top: 80px;
+  height: 250px;
+  z-index: 1; 
+  transition: transform 0.3s ease;
+}
+.landingmain-navbar-icons {
+  position: fixed;
+  top: 39px;
+  right: 100px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  z-index: 9999;
+  transition: all 0.3s ease;
+  pointer-events: auto;
+}
+
+.landingmain-navbar-icons .navbar-icon {
+  width: auto;        
+  height: 30px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  pointer-events: auto;
+}
+
+.navbar-icon:hover {
+  transform: scale(1.1);
+}
+
+.landingmain-nav-links {
+  list-style: none;
+  display: flex;
+  gap: 30px;                 
+  padding: 0;
+  margin: 0;
+}
+
+.landingmain-link {
+  text-decoration: none;
+  color: #800000;
+  font-size: 16px;
+  font-weight: 400;
+  transition: 0.3s;
+}
+
+.landingmain-link:hover {
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.landingmain-link.active {
+  font-weight: 600;
+}
+
+
+.landingmain-bottom-img {
+  position: absolute;
+  bottom: -10px;
+  left: -70px;
+  width: 120%;
+  height: 62%;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.landingmain-bottom-img img {
+  width: 130%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.landingmain-grace {
+  position: absolute;  
+  top: 180px;          
+  left: 140px;          
+  z-index: 1;          
+}
+
+.landingmain-grace h1 {
+  font-family: 'Gilda Display', serif;
+  font-size: 58px;
+  color: #d0a068;
+  margin: 0;           
+}
+
+
+.landingmain-paragraph {
+  position: absolute;
+  bottom: 120px;     
+  left: 90px;       
+  width: 40%;       
+  text-align: justify; 
+  z-index: 1;
+}
+
+.landingmain-paragraph p {
+  font-family: 'Poppins', sans-serif;
+  font-size: 22px;
+  color: #EDEDED;   
+  line-height: 1.6;
+  margin: 0;
+}
+
+
+.landingmain-bottom-right-flower {
+  position: absolute;
+  bottom: 90px;       
+  right: 40px;        
+  z-index: 1;      
+}
+
+.landingmain-bottom-right-flower img {
+  height: 850px;    
+  width: 867;      
+}
+
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.landingmain-navbar,
+.landingmain-navbar-icons,
+.landingmain-logo,
+.landingmain-grace,
+.landingmain-cta-buttons,
+.landingmain-paragraph,
+.landingmain-bottom-img,
+.landingmain-bottom-right-flower {
+  opacity: 0;
+  animation: fadeIn 1s ease forwards;
+}
+
+
+.landingmain-navbar {
+  animation-delay: 0.2s;
+}
+
+.landingmain-navbar-icons {
+  animation-delay: 0.4s;
+}
+
+.landingmain-grace {
+  animation-delay: 0.5s;
+}
+
+.landingmain-cta-buttons {
+  animation-delay: 0.8s;
+}
+
+.landingmain-paragraph {
+  animation-delay: 1.1s;
+}
+
+.landingmain-bottom-img {
+  animation-delay: 1.4s;
+}
+
+.landingmain-bottom-right-flower {
+  animation-delay: 1.7s;
+}
+
+.landingmain-logo {
+  animation-delay: 1.7s;
+}
+
+
+
+.landingmain-scrollable h2 {
+  font-family: 'Gilda Display', serif;
+  color: #800000;
+  font-size: 42px;
+  margin-bottom: 20px;
+}
+
+.landingmain-scrollable p {
+  font-family: 'Poppins', sans-serif;
+  font-size: 18px;
+  color: #4A4A4A;
+  width: 60%;
+  line-height: 1.6;
+  text-align: justify;
+}
+
+
+html {
+  scroll-behavior: smooth;
+}
+
+body, html {
+  height: auto;
+  overflow-y: auto;
+}
+
+
+.landingmain-scrollable {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f6e9db;
+  padding: 1000px 180px 100px;
+  box-sizing: border-box;
+  z-index: 0;
+}
+
+
+.landingmain-bottom-abt {
+  position: absolute;
+  top: -100px;       
+  left: 3px;
+  width: 100%;
+  height: auto;
+   overflow: visible;
+  z-index: 1;        
+  transform: rotate(180deg);
+  transform-origin: center;
+}
+
+.landingmain-bottom-abt img {
+  width: 102%;
+  height: 800px;
+  display: block;
+}
+
+
+.navbar-white-text .landingmain-link {
+  color: white !important;
+  transition: color 0.3s ease;
+}
+
+.navbar-white-text .landingmain-link:hover {
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+
+.landingmain-left-overlay {
+  position: absolute;
+  bottom: 100px;
+  left: 20px;
+  z-index: 2;
+}
+
+.landingmain-left-overlay img {
+  width: 305px;  
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.landingmain-left-overlay-two {
+  position: absolute;
+  bottom: -10px;
+  left: 270px;
+  z-index: 2;
+}
+
+.landingmain-left-overlay-two img {
+  width: 680px; 
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.landingmain-left-overlay-three {
+  position: absolute;
+  bottom: 10px;
+  left: 800px;
+  z-index: 2;
+}
+
+.landingmain-left-overlay-three img {
+  width: 970px;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.landingmain-left-overlay-above {
+  position: absolute;
+  bottom: 680px;      /* move it closer to the bottom for visibility */
+  left: 350px;       /* adjust horizontally to sit above overlay-two */
+  z-index: 4;        /* make sure it’s above overlay-two */
+}
+
+.landingmain-left-overlay-above img {
+  width: 600px;      /* size of the image */
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+  display: block;    /* ensure it displays */
+}
+/* New styles for contact section */
+.landingmain-contact {
+  position: relative; /* allows absolute positioning inside */
+  min-height: 100vh;
+  background-color: #f6e9db;
+  padding: 120px 80px 80px;
+  box-sizing: border-box;
+}
+
+ .landingmain-contact-bottom-image {
+  position: relative;
+  bottom: -181px;     /* same as before */
+  left: -80px;
+  right: 0;
+  width: 1729px;     /* your desired width */
+  margin: 0 auto;    /* centers the image */
+  z-index: 2;
+}
+
+.landingmain-contact-bottom-image img {
+  width: 100%;       /* fills the container width */
+  height: auto;
+  display: block;
+}
+
+.landingmain-contact-left-overlay {
+  position: absolute;
+  bottom: 200px;       /* aligns to the bottom of the contact section */
+  left: 0px;      /* distance from the left edge */
+  z-index: 3;      /* ensures it sits above the footer */
+}
+
+.landingmain-contact-left-overlay img {
+  width: 600px;    /* adjust size as needed */
+  height: auto;
+  display: block;
+}
+
+.landingmain-contact-right-overlay {
+  position: absolute;
+  bottom: 650px;      /* distance from bottom, above footer */
+  right: 525px;       /* distance from right edge */
+  width: 400px;      /* adjust size as needed */
+  height: auto;
+  z-index: 3;        /* above footer */
+}
+
+.landingmain-contact-right-overlay img {
+  width: 800px;
+  height: auto;
+  display: block;
+}
+
+.landing-contact-form-wrapper {
+  display: flex;
+  justify-content: center;   /* centers horizontally */
+  align-items: flex-start;
+  width: 100%;
+  padding-top: 290px;        /* control vertical spacing */
+  padding-left: 300px;       /* adjust this to shift horizontally */
+  padding-right: 190px;      /* add balance if needed */
+}
+
+/* Input and textarea base spacing */
+.landing-contact-inputbox,
+.landing-contact-messagebox {
+  width: 100%;
+  padding: 12px 12px 12px 30px; /* space for icon */
+  border-radius: 25px;
+  border: 2px solid #ddd;
+  background-color: rgba(143, 143, 143, 0.2);
+  outline: none;
+  font-size: 14px;
+  font-style: italic;
+  font-family: "Poppins", sans-serif;
+  transition: 0.3s;
+}
+
+.landing-contact-inputbox:focus,
+.landing-contact-messagebox:focus {
+  border-color: #1e90ff;
+  box-shadow: 0 0 5px rgba(30, 144, 255, 0.5);
+  background-color:  #ffffff;
+}
+
+/* Input row layout */
+.landing-contact-input-rowbox {
+  display: flex;
+  justify-content: space-between;
+  gap: 90px;
+  margin-bottom: 25px; 
+}
+
+/* Input with icon container */
+.landing-contact-input-withicon {
+  position: relative;
+  flex: 1;
+}
+
+/* Input icons */
+.landing-contact-input-withicon i {
+  position: absolute;
+  top: 50%;
+  left: 15px;
+  transform: translateY(-50%);
+  color: #333;
+  font-size: 16px;
+}
+
+/* Textarea adjustments */
+.landing-contact-messagebox {
+  height: 180px;
+  gap: 40px;
+  resize: none;
+  padding-left: 18px; 
+}
+
+/* Submit button */
+.landing-contact-submitbtnbox {
+  display: block;
+  margin: 20px auto 0 auto; /* centers horizontally */
+  width: 200px;
+  padding: 12px;
+  border: 2px solid #6b0b0b;
+  background: transparent;
+  border-radius: 40px;
+  font-weight: 700;
+  font-size: 14px;
+  color: #6b0b0b;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+
+.landing-contact-submitbtnbox:hover {
+  background: #6b0b0b;
+  color: #fff;
+}
+
+
+.fixed-layout {
+  min-width: 1920px;
+  max-width: 1920px;
+  min-height: 1080px;
+  max-height: 1080px;
+  overflow: hidden;
+}
