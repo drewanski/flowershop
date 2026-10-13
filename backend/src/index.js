@@ -16,10 +16,10 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 
 const CORS_ORIGINS = process.env.CORS_ORIGINS?
   process.env.CORS_ORIGINS.split(',').map(origin => origin.trim()):
-  ['http://localhost:8081'];
+  ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:8081'];
 const JWT_SECRET = process.env.JWT_SECRET;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/coffeeshop';
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 if (!JWT_SECRET) 
   throw new Error('JWT_SECRET is not defined in the environment variables. Please set it in your .env file.');
