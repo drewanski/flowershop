@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";  
 import "./LoginUser.css";
 import { auth } from "../firebase/firebase";
-import { onAuthStateChanged, signOut, updateProfile } from "firebase/auth";
+import { updateProfile } from "firebase/auth";
 import logo from "../assets/logo_a.png";
+import { apiRequest } from "../api";
 
 export default function LoginUser() {
   const [user, setUser] = useState(null);
@@ -13,37 +14,35 @@ export default function LoginUser() {
   const [bio, setBio] = useState("");
   const [profileImage, setProfileImage] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [orderHistory, setOrderHistory] = useState([]);
   const navigate = useNavigate();
 
   // Fetch logged-in user
   useEffect(() => {
-  const localUser = JSON.parse(localStorage.getItem("user_currentUser"));
+  let localUser;
+  try {
+    localUser = JSON.parse(localStorage.getItem("user_currentUser") || 'null');
+  } catch (error) {
+    localStorage.removeItem('user_currentUser');
+  }
   const isLoggedIn = localStorage.getItem("user_isLoggedIn") === "true";
 
-  if (localUser && isLoggedIn) {
+  if (localUser && isLoggedIn && localStorage.getItem('user_token') && localUser.role === 'customer') {
     setUser(localUser); // use localStorage user
-    setName(localUser.displayName || localUser.name || "Your Name");
-    setBio(localStorage.getItem(`bio_${localUser.uid}`) || "");
-    setProfileImage(localStorage.getItem(`profileImg_${localUser.uid}`));
+    setName(localUser.displayName || localUser.name || `${localUser.firstName || ''} ${localUser.lastName || ''}`.trim() || "Your Name");
+    const profileKey = localUser._id || localUser.uid;
+    setBio(localStorage.getItem(`bio_${profileKey}`) || "");
+    setProfileImage(localStorage.getItem(`profileImg_${profileKey}`));
+    if (localStorage.getItem('user_token')) {
+      apiRequest('/orders/mine')
+        .then(({ ok, data }) => setOrderHistory(ok && Array.isArray(data?.payload) ? data.payload : []))
+        .catch((error) => console.error('Unable to load order history:', error));
+    }
     setLoading(false);
     return;
   }
-
-  // fallback to Firebase auth
-  const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-    if (firebaseUser) {
-      setUser(firebaseUser);
-      setName(firebaseUser.displayName || "Your Name");
-      setBio(localStorage.getItem(`bio_${firebaseUser.uid}`) || "");
-      setProfileImage(localStorage.getItem(`profileImg_${firebaseUser.uid}`));
-    } else {
-      console.log("No user found, redirecting to login");
-      navigate("/account", { replace: true });
-    }
-    setLoading(false);
-  });
-
-  return () => unsubscribe();
+  navigate('/account', { replace: true });
+  setLoading(false);
 }, [navigate]);
 
 const handleAccountClick = () => {
@@ -77,12 +76,26 @@ const handleAccountClick = () => {
   const handleSaveProfile = async () => {
     if (!user) return;
     try {
+      const profileKey = user._id || user.uid;
+      const nameParts = name.trim().split(/\s+/);
+      if (localStorage.getItem('user_token') && nameParts.length) {
+        const { ok, data } = await apiRequest('/auth/profile', {
+          method: 'PATCH',
+          body: JSON.stringify({
+            firstName: nameParts[0],
+            lastName: nameParts.slice(1).join(' ') || nameParts[0],
+          }),
+        });
+        if (!ok) throw new Error(data?.message || 'Profile update failed.');
+        const currentUser = JSON.parse(localStorage.getItem('user_currentUser')) || {};
+        localStorage.setItem('user_currentUser', JSON.stringify({ ...currentUser, ...data.payload }));
+      }
       if (preview) {
-        localStorage.setItem(`profileImg_${user.uid}`, preview);
+        localStorage.setItem(`profileImg_${profileKey}`, preview);
         setProfileImage(preview);
       }
-      localStorage.setItem(`bio_${user.uid}`, bio);
-      await updateProfile(auth.currentUser, { displayName: name });
+      localStorage.setItem(`bio_${profileKey}`, bio);
+      if (auth.currentUser) await updateProfile(auth.currentUser, { displayName: name });
       setEditing(false);
       alert("✅ Profile updated successfully!");
       console.log("Profile saved for user:", user.uid);
@@ -94,30 +107,20 @@ const handleAccountClick = () => {
 
  const handleLogout = async () => {
   try {
-    const token = localStorage.getItem("user_token");
-
-    // Optional: notify backend to invalidate token
-    if (token) {
-      await fetch("/api/logout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-      });
-    }
-
     // Clear all auth-related info from localStorage
     localStorage.removeItem("user_currentUser");
     localStorage.removeItem("user_isLoggedIn");
     localStorage.removeItem("user_token");
     localStorage.removeItem("currentUserEmail");
     localStorage.removeItem("currentUserType");
+    localStorage.removeItem("userType");
+    localStorage.removeItem("userEmail");
 
     // Clear any user-specific localStorage (if you store profile info)
     if (user?.uid) {
-      localStorage.removeItem(`bio_${user.uid}`);
-      localStorage.removeItem(`profileImg_${user.uid}`);
+      const profileKey = user._id || user.uid;
+      localStorage.removeItem(`bio_${profileKey}`);
+      localStorage.removeItem(`profileImg_${profileKey}`);
     }
 
     // Clear user state
@@ -132,12 +135,6 @@ const handleAccountClick = () => {
     alert("❌ Logout failed. Please try again.");
   }
 };
-
-  const orderHistory = [
-    { id: "001", name: "Nurture Flower Vase", price: "₱3,395", qty: 1, date: "2023-10-15" },
-    { id: "002", name: "Serena Grace", price: "₱2,995", qty: 1, date: "2023-10-10" },
-    { id: "003", name: "Dalisay Charm", price: "₱2,995", qty: 1, date: "2023-10-05" },
-  ];
 
   if (loading) {
     return (
@@ -197,19 +194,20 @@ const handleAccountClick = () => {
       </div>
 
       <div className="loginuser-right">
-        <button className="track-btn">TRACK ORDERS</button>
+          <button className="track-btn" onClick={() => document.querySelector('.order-history-title')?.scrollIntoView({ behavior: 'smooth' })}>TRACK ORDERS</button>
         <h1 className="order-history-title">Order History</h1>
         <div className="order-list">
+          {orderHistory.length === 0 && <p>No orders yet.</p>}
           {orderHistory.map((order) => (
-            <div className="order-item" key={order.id}>
+            <div className="order-item" key={order._id}>
               <div className="order-info">
-                <p className="order-name">{order.name}</p>
-                <p className="order-id">Order #: {order.id}</p>
-                <p className="order-date">Date: {order.date}</p>
+                <p className="order-name">{order.products?.map((item) => item.product?.name || 'Product').join(', ')}</p>
+                <p className="order-id">Order #: {order.orderNumber}</p>
+                <p className="order-date">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
               </div>
               <div className="order-meta">
-                <p>Qty: {order.qty}</p>
-                <p>{order.price}</p>
+                <p>Qty: {order.products?.reduce((sum, item) => sum + item.quantity, 0) || 0}</p>
+                <p>₱ {(Number(order.grandTotal) || 0).toLocaleString()}</p>
               </div>
             </div>
           ))}

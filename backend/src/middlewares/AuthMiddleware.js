@@ -16,6 +16,9 @@ const requireToken = async (req, res, next) => {
     if (!user) return res.status(401).json(
       AuthResponses.session.invalidSession()
     );
+    if (user.isDisabled) return res.status(401).json(
+      AuthResponses.session.invalidSession()
+    );
 
     req.user = user;
     next();

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import "../pages/AdminLog.css"; 
 import logo from "../assets/logo_a.png";
 import bg from "../assets/background.png";
+import { apiRequest } from "../api";
 
 const Toast = ({ message, onClose }) => (
   <div className="toast">
@@ -28,11 +29,16 @@ export default function AdminLog() {
   // ✅ Check existing session
   useEffect(() => {
     const verifySession = async () => {
-      const userType = localStorage.getItem("userType");
-      const email = localStorage.getItem("userEmail");
+      let currentUser;
+      try {
+        currentUser = JSON.parse(localStorage.getItem('user_currentUser') || 'null');
+      } catch (error) {
+        localStorage.removeItem('user_currentUser');
+      }
+      const userType = currentUser?.role;
 
-      if (userType && email) {
-        if (userType === "admin") {
+      if (localStorage.getItem('user_token') && currentUser) {
+        if (userType === "admin" || userType === "manager") {
           navigate("/adminpanel");
         } else if (userType === "staff") {
           navigate("/landingmain");
@@ -52,44 +58,34 @@ export default function AdminLog() {
     }
 
     try {
-      const res = await fetch("http://localhost:5001/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const { ok, data } = await apiRequest('/auth/login', {
+        method: 'POST',
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
+      if (ok) {
+        const payload = data?.payload || {};
+        const user = payload.user || {};
+        const role = user.role || 'customer';
 
-      if (res.ok) {
-        // Save session info
-        localStorage.setItem("userType", data.userType);
-        localStorage.setItem("userEmail", data.user.email);
-
-        // Optional: fetch last login time for admins
-        if (data.userType === "admin") {
-          const logRes = await fetch(
-            `http://localhost:5001/api/employeelogs?email=${data.user.email}&role=admin`
-          );
-          if (logRes.ok) {
-            const logs = await logRes.json();
-            if (logs.length > 0) {
-              setLastLogin(logs[logs.length - 1].loginAt);
-            }
-          }
+        if (!['admin', 'manager'].includes(role)) {
+          showToast('This employee login is limited to admin and manager accounts.');
+          return;
         }
 
-        // Navigate based on user type
-        if (data.userType === "admin") {
-          navigate("/adminpanel");
-        } else if (data.userType === "staff") {
-          navigate("/landingmain");
-        }
+        localStorage.setItem('userType', role);
+        localStorage.setItem('userEmail', user.email || email);
+        localStorage.setItem('user_token', payload.token || '');
+        localStorage.setItem('user_currentUser', JSON.stringify(user));
+        localStorage.setItem('user_isLoggedIn', 'true');
+
+        navigate('/adminpanel');
       } else {
-        showToast(`❌ ${data.message}`);
+        showToast(`❌ ${data?.message || 'Login failed'}`);
       }
     } catch (error) {
-      console.error("Error:", error);
-      showToast("Server error. Please try again later.");
+      console.error('Error:', error);
+      showToast('Server error. Please try again later.');
     }
   };
 

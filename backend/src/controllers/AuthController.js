@@ -41,7 +41,25 @@ const login = async (req, res) => {
   }
 }
 
+const googleLogin = async (req, res) => {
+  const response = await AuthService.googleLogin(req.body || {});
+  return res.status(response.status).json({
+    ...(response.payload ? { payload: response.payload } : {}),
+    message: response.message,
+  });
+}
+
+const updateProfile = async (req, res) => {
+  const response = await AuthService.updateProfile(req.user._id, req.body);
+  return res.status(response.status).json({
+    ...(response.payload ? { payload: response.payload } : {}),
+    message: response.message,
+  });
+}
+
 module.exports = {
   registerCustomer,
   login,
+  googleLogin,
+  updateProfile,
 };

@@ -57,51 +57,36 @@ const handleSubtract = () => {
 };
 
  const handleAddToCart = async () => {
-  const currentUser = JSON.parse(localStorage.getItem("user_currentUser"));
-  const isLoggedInFlag = localStorage.getItem("user_isLoggedIn");
-  const loggedIn = currentUser && isLoggedInFlag === "true";
+    const currentUser = JSON.parse(localStorage.getItem('user_currentUser'));
+    const isLoggedInFlag = localStorage.getItem('user_isLoggedIn');
+    const loggedIn = currentUser && isLoggedInFlag === 'true';
 
-  if (!loggedIn) {
-    alert("Please log in to add items to your cart.");
-    navigate("/account");
-    return;
-  }
+    const cartItem = {
+      _id: flower._id || flower.name,
+      name: flower.name,
+      price: flower.price,
+      quantity,
+      img: flower.image || flower.img,
+      stock: flower.stock,
+    };
 
-  // Determine userId for cart: prefer MongoDB _id, fallback to Firebase uid
-  const userId = currentUser._id || currentUser.uid;
-  if (!userId) {
-    alert("User ID missing. Cannot add to cart.");
-    return;
-  }
+    const storedCart = JSON.parse(localStorage.getItem('cartItems')) || [];
+    const existingIndex = storedCart.findIndex((item) => item._id === cartItem._id);
 
-  const cartItem = {
-    _id: flower._id,
-    name: flower.name,
-    price: flower.price,
-    quantity,
-    img: flower.img,
-    stock: flower.stock,
-  };
-
-  try {
-    const res = await fetch("http://localhost:5001/api/cart/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, cart: [cartItem] }),
-    });
-
-    const data = await res.json();
-    if (res.ok) {
-      alert(`${flower.name} added to cart!`);
-      navigate("/cart");
+    if (existingIndex >= 0) {
+      if (storedCart[existingIndex].quantity + quantity > flower.stock) {
+        alert("You've reached the maximum stock available!");
+        return;
+      }
+      storedCart[existingIndex].quantity += quantity;
     } else {
-      console.error("Failed to save cart:", data.message);
+      storedCart.push(cartItem);
     }
-  } catch (err) {
-    console.error("Error saving cart:", err);
-  }
-};
 
+    localStorage.setItem('cartItems', JSON.stringify(storedCart));
+    alert(`${flower.name} added to cart!`);
+    navigate('/cart');
+  };
 
 
   const handleAddToWishlist = () => {
@@ -171,7 +156,7 @@ const handleSubtract = () => {
       {/* 🌹 MAIN FLOWER DETAILS */}
       <div className="viewdetails-container">
         <div className="viewdetails-image-container">
-          <img src={flower.img} alt={flower.name} className="viewdetails-image" />
+          <img src={flower.image || flower.img} alt={flower.name} className="viewdetails-image" />
         </div>
 
         <div className="viewdetails-info">

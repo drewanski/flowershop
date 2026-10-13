@@ -21,6 +21,7 @@ import flowerTop from "../assets/abttlogo.png";
 import foeter from "../assets/footer.png";
 import leftImageForContact from "../assets/phone.png";
 import ctntxt from "../assets/conttxt.png";
+import { apiRequest } from "../api";
 
 
 export default function Landingmain() {
@@ -113,15 +114,11 @@ const [name, setName] = useState("");
     const data = { name, email, message };
 
     try {
-      const res = await fetch("http://127.0.0.1:5001/api/contact", { // updated port
+      const { ok, data: result } = await apiRequest('/contact', {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-
-      const result = await res.json();
-
-      if (res.ok) {
+      if (ok) {
         alert("✅ Message sent successfully!");
         console.log("✅ Server response:", result);
 
@@ -130,7 +127,7 @@ const [name, setName] = useState("");
         setEmail("");
         setMessage("");
       } else {
-        alert(`❌ Error: ${result.error || "Failed to send message"}`);
+        alert(`❌ Error: ${result?.message || "Failed to send message"}`);
         console.error("Error response:", result);
       }
     } catch (err) {

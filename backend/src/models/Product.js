@@ -42,6 +42,10 @@ const productSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  type: {
+    type: String,
+    trim: true,
+  },
 
   isAddon: {
     type: Boolean,

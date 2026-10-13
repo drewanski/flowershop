@@ -1,4 +1,7 @@
 const User = require('../models/User');
+const EmployeeLog = require('../models/EmployeeLog');
+const crypto = require('crypto');
+const { getFirebaseAuth } = require('../utils/FirebaseAdmin');
 
 const AuthResponses = require('../responses/AuthResponses');
 const GenericResponses = require('../responses/GenericResponses');
@@ -12,7 +15,7 @@ const { isValidEmail, isValidPhoneNumber } = require('../utils/UserUtils');
 //=======================//
 
 const registerCustomer = async (userData) => {
-  const { firstName, middleName, lastName, contactNumber, username, email, password } = userData || {};
+  const { firstName, middleName, lastName, contactNumber, homeAddress, username, email, password } = userData || {};
 
   // Validate required fields
 
@@ -60,6 +63,7 @@ const registerCustomer = async (userData) => {
       middleName: middleName?.trim() || undefined,
       lastName: lastName.trim(),
       contactNumber: contactNumber.trim(),
+      homeAddress: homeAddress?.trim() || undefined,
       
       username: username.trim(),
       email: email.trim().toLowerCase(),
@@ -121,17 +125,131 @@ const login = async (email, password) => {
     const isPasswordMatch = await passwordsMatch(password, user.password);
 
     if (!isPasswordMatch) return AuthResponses.login.invalidData(['email', 'password']);
+    if (user.isDisabled) return AuthResponses.login.invalidData(['email', 'password']);
 
     const token = generateJWT(user);
+    let lastLogin;
+
+    if (user.role !== 'customer') {
+      try {
+        const previousLogin = await EmployeeLog.findOne({ user: user._id }).sort({ createdAt: -1 });
+        lastLogin = previousLogin?.createdAt;
+        await EmployeeLog.create({
+          user: user._id,
+          email: user.email,
+          role: user.role,
+        });
+      } catch (error) {
+        LogUtils.logError(`Unable to record employee login: ${error.message}`);
+      }
+    }
 
     user.password = undefined; // Remove password from the response
 
-    return AuthResponses.login.success({ user, token });
+    return AuthResponses.login.success({ user, token, ...(lastLogin ? { lastLogin } : {}) });
   } catch (error) {
     LogUtils.logError(`Error in login: ${error.message}`);
     return GenericResponses.internalServerError();
   }
 }
+
+const googleLogin = async ({ idToken, contactNumber, homeAddress } = {}) => {
+  if (typeof idToken !== 'string' || !idToken) {
+    return { status: 400, message: 'A Firebase ID token is required.' };
+  }
+
+  let claims;
+  try {
+    claims = await getFirebaseAuth().verifyIdToken(idToken);
+  } catch (error) {
+    return { status: 401, message: 'Google sign-in could not be verified.' };
+  }
+
+  const email = claims.email?.trim().toLowerCase();
+  if (!email || !claims.email_verified) {
+    return { status: 401, message: 'A verified Google email is required.' };
+  }
+
+  try {
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      if (!contactNumber) {
+        return {
+          status: 428,
+          payload: { requiresContactNumber: true },
+          message: 'Enter a contact number to finish creating your account.',
+        };
+      }
+      if (!isValidPhoneNumber(String(contactNumber).trim())) {
+        return { status: 400, message: 'Enter a valid contact number.' };
+      }
+
+      const nameParts = (claims.name || 'Google Customer').trim().split(/\s+/);
+      const usernamePrefix = (email.split('@')[0].replace(/[^a-z0-9_]/gi, '').slice(0, 19) || 'google');
+      let username = `${usernamePrefix}_${claims.uid.slice(-8)}`;
+      let suffix = 1;
+      while (await User.exists({ username })) {
+        username = `${usernamePrefix.slice(0, 17)}_${claims.uid.slice(-6)}${suffix++}`;
+      }
+
+      user = await User.create({
+        firstName: nameParts[0] || 'Google',
+        lastName: nameParts.slice(1).join(' ') || 'Customer',
+        contactNumber: String(contactNumber).trim(),
+        homeAddress: typeof homeAddress === 'string' ? homeAddress.trim() : undefined,
+        username,
+        email,
+        password: await encryptPassword(crypto.randomBytes(32).toString('base64url')),
+        role: 'customer',
+      });
+    }
+
+    if (user.isDisabled) {
+      return { status: 403, message: 'This account is disabled.' };
+    }
+
+    const token = generateJWT(user);
+    if (user.role !== 'customer') {
+      await EmployeeLog.create({ user: user._id, email: user.email, role: user.role });
+    }
+    user.password = undefined;
+    return { status: 200, payload: { user, token }, message: 'Google sign-in successful.' };
+  } catch (error) {
+    if (error.code === 11000) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser && !existingUser.isDisabled) {
+        return { status: 200, payload: { user: existingUser, token: generateJWT(existingUser) }, message: 'Google sign-in successful.' };
+      }
+    }
+    LogUtils.logError(`Error in googleLogin: ${error.message}`);
+    return { status: 500, message: 'Unable to complete Google sign-in.' };
+  }
+};
+
+const updateProfile = async (userId, profileData = {}) => {
+  const firstName = typeof profileData.firstName === 'string' ? profileData.firstName.trim() : '';
+  const lastName = typeof profileData.lastName === 'string' ? profileData.lastName.trim() : '';
+  if (!firstName || !lastName) {
+    return { status: 400, message: 'First name and last name are required.' };
+  }
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    {
+      firstName,
+      lastName,
+      ...(typeof profileData.homeAddress === 'string'
+        ? { homeAddress: profileData.homeAddress.trim() }
+        : {}),
+    },
+    { new: true, runValidators: true }
+  ).select('-password');
+
+  return user
+    ? { status: 200, payload: user, message: 'Profile updated.' }
+    : { status: 404, message: 'User not found.' };
+};
 
 //========//
 // EXPORT //
@@ -140,4 +258,6 @@ const login = async (email, password) => {
 module.exports = {
   registerCustomer,
   login,
+  googleLogin,
+  updateProfile,
 };

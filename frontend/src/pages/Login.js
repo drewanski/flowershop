@@ -5,11 +5,9 @@ import logo from "../assets/logo_a.png";
 import bg from "../assets/background.png";
 import cartIcon from "../assets/crtlogo.png";
 import accountIcon from "../assets/acntlogo.png";
+import { apiRequest } from "../api";
 import { auth, provider } from "../firebase/firebase";
-import {
-  signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider
-} from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { signInWithPopup } from "firebase/auth";
 
 const Toast = ({ message, onClose }) => (
   <div className="toast">
@@ -54,10 +52,16 @@ useEffect(() => {
   setSuggestedUsers(savedUsers);
 
   // Auto-login if user didn’t log out
-const currentUser = localStorage.getItem("user_currentUser");
+let currentUser;
+try {
+  currentUser = JSON.parse(localStorage.getItem("user_currentUser") || 'null');
+} catch (error) {
+  localStorage.removeItem('user_currentUser');
+}
 const isLoggedIn = localStorage.getItem("user_isLoggedIn");
-if (currentUser && isLoggedIn === "true") {
-  navigate("/userinfo");
+const hasToken = localStorage.getItem('user_token');
+if (currentUser && isLoggedIn === "true" && hasToken) {
+  navigate(currentUser.role === 'admin' || currentUser.role === 'manager' ? '/adminpanel' : '/userinfo');
 }
 }, []);
 
@@ -74,21 +78,34 @@ const handleLogin = async () => {
     return;
   }
   try {
-const res = await fetch("http://localhost:5001/api/users/login", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ email, password, signInMethod: "manual" }), // ✅ correct value
-});
-    const data = await res.json();
+    const { ok, data } = await apiRequest('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
 
-    if (!res.ok) return showToast(data.message || "Login failed");
+    if (!ok) {
+      return showToast(data?.message || 'Login failed');
+    }
 
-    localStorage.setItem("user_token", data.token);
-    localStorage.setItem("user_currentUser", JSON.stringify(data.user));
-    localStorage.setItem("user_isLoggedIn", "true")
-    navigate("/userinfo");
+    const payload = data?.payload || {};
+    const user = payload.user || {};
+    const token = payload.token;
+
+    if (!token) {
+      return showToast('Login response was missing a token.');
+    }
+    if (!['customer', 'admin', 'manager'].includes(user.role)) {
+      return showToast('This account does not have access to a customer or management page.');
+    }
+
+    localStorage.setItem('user_token', token);
+    localStorage.setItem('user_currentUser', JSON.stringify(user));
+    localStorage.setItem('user_isLoggedIn', 'true');
+    localStorage.setItem('userType', user.role || 'customer');
+    localStorage.setItem('userEmail', user.email || email);
+    navigate(user.role === 'admin' || user.role === 'manager' ? '/adminpanel' : '/userinfo');
   } catch (err) {
-    showToast("Login error: " + err.message);
+    showToast('Login error: ' + err.message);
   }
 };
 
@@ -97,15 +114,39 @@ const res = await fetch("http://localhost:5001/api/users/login", {
 // ---------------- Google Login ----------------
 const handleGoogleLogin = async () => {
   try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-      console.log("Google user:", result.user);
-      localStorage.setItem("user_currentUser", JSON.stringify(user));
-      localStorage.setItem("user_isLoggedIn", "true");
-      navigate("/loguser"); 
-    } catch (error) {
-      console.error("Google login error:", error.message);
-      showToast("Google login failed!");
+    const credential = await signInWithPopup(auth, provider);
+    const idToken = await credential.user.getIdToken();
+    let result = await apiRequest('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ idToken }),
+    });
+
+    if (result.status === 428) {
+      const contactNumber = window.prompt('Enter your phone number to finish creating your account:');
+      if (!contactNumber) return;
+      result = await apiRequest('/auth/google', {
+        method: 'POST',
+        body: JSON.stringify({ idToken, contactNumber }),
+      });
+    }
+
+    if (!result.ok) {
+      throw new Error(result.data?.message || 'Google sign-in failed.');
+    }
+
+    const { user, token } = result.data.payload;
+    if (!['customer', 'admin', 'manager'].includes(user.role)) {
+      return showToast('This account does not have access to a customer or management page.');
+    }
+    localStorage.setItem('user_token', token);
+    localStorage.setItem('user_currentUser', JSON.stringify(user));
+    localStorage.setItem('user_isLoggedIn', 'true');
+    localStorage.setItem('userType', user.role || 'customer');
+    localStorage.setItem('userEmail', user.email || credential.user.email);
+    navigate(user.role === 'admin' || user.role === 'manager' ? '/adminpanel' : '/userinfo');
+  } catch (error) {
+    console.error('Google sign-in error:', error);
+    showToast(error.message || 'Google sign-in failed.');
   }
 };
 

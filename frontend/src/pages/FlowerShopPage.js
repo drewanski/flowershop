@@ -1,4 +1,3 @@
-import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -6,6 +5,7 @@ import logo from "../assets/logo_a.png";
 import bg from "../assets/background.png";
 import cartIcon from "../assets/crtlogo.png";
 import accountIcon from "../assets/acntlogo.png";
+import { apiRequest } from "../api";
 import "./FlowerShopPage.css";
 
 const FlowerShopPage = () => {
@@ -49,10 +49,12 @@ const handleViewDetails = (flower) => {
   useEffect(() => {
     const fetchFlowers = async () => {
       try {
-        const response = await axios.get("http://localhost:5001/api/flowers");
-        setFlowerItems(response.data);
+        const { data } = await apiRequest('/products?status=available&isAddon=false');
+        const items = data?.payload || data || [];
+        setFlowerItems(Array.isArray(items) ? items : []);
       } catch (error) {
-        console.error("Error fetching flowers:", error);
+        console.error('Error fetching flowers:', error);
+        setFlowerItems([]);
       }
     };
     fetchFlowers();
@@ -72,6 +74,8 @@ const handleViewDetails = (flower) => {
 
     return matchesSearch && matchesCategory && matchesType && matchesPrice;
   });
+  const categories = [...new Set(flowerItems.map((item) => item.category).filter(Boolean))];
+  const flowerTypes = [...new Set(flowerItems.map((item) => item.type).filter(Boolean))];
 
   return (
     <div
@@ -137,11 +141,7 @@ const handleViewDetails = (flower) => {
           className="flower-dropdown"
         >
           <option value="All">CATEGORY ▼</option>
-          <option value="Signature Blooms">Signature Blooms</option>
-          <option value="Birthday">Birthday</option>
-          <option value="Valentine">Valentine</option>
-          <option value="Wedding">Wedding</option>
-          <option value="Special">Special</option>
+          {categories.map((category) => <option key={category} value={category}>{category}</option>)}
         </select>
 
         <select
@@ -161,10 +161,7 @@ const handleViewDetails = (flower) => {
           className="flower-dropdown"
         >
           <option value="All">FLOWER TYPE ▼</option>
-          <option value="Roses">Roses</option>
-          <option value="Tulips">Tulips</option>
-          <option value="Carnations">Carnations</option>
-          <option value="Sunflowers">Sunflowers</option>
+          {flowerTypes.map((type) => <option key={type} value={type}>{type}</option>)}
         </select>
 
         <div className="flower-search">
@@ -180,19 +177,21 @@ const handleViewDetails = (flower) => {
 
       {/* Product Grid */}
 {/* Product Grid */}
-{filteredFlowers.filter(f => f.category === "Signature Blooms").length > 0 && (
-  <>
-    <h2 className="flower-section-title">Our Signature Blooms</h2>
+{categories.filter((category) => categoryFilter === 'All' || category === categoryFilter).map((category) => {
+  const categoryProducts = filteredFlowers.filter((flower) => flower.category === category);
+  if (!categoryProducts.length) return null;
+
+  return (
+  <section key={category}>
+    <h2 className="flower-section-title">{category === 'Signature Blooms' ? 'Our Signature Blooms' : category}</h2>
     <div className="flower-grid">
-      {filteredFlowers
-        .filter(f => f.category === "Signature Blooms")
-        .map(f => (
-          <div key={f._id} className="flower-card">
-            <img src={f.img} alt={f.name} className="flower-img" />
+      {categoryProducts.map(f => (
+          <div key={f._id || f.name} className="flower-card">
+            <img src={f.image || f.img} alt={f.name} className="flower-img" />
             <div className="flower-info">
               <h3>{f.name}</h3>
               <div className="price-view-wrapper">
-                <p>₱ {f.price.toLocaleString()}</p>
+                <p>₱ {(Number(f.price) || 0).toLocaleString()}</p>
                  <button
                   className="flower-view-btn"
                   onClick={() => handleViewDetails(f)}
@@ -204,38 +203,9 @@ const handleViewDetails = (flower) => {
           </div>
         ))}
     </div>
-  </>
-)}
-
-
-{filteredFlowers.filter(f => f.category === "Birthday Blooms").length > 0 && (
-  <>
-   <h2 className="flower-section-title" style={{ marginTop: "60px" }}>
-  Birthday Blooms
-</h2>
-    <div className="flower-grid">
-      {filteredFlowers
-        .filter(f => f.category === "Birthday Blooms")
-        .map(f => (
-          <div key={f._id} className="flower-card">
-            <img src={f.img} alt={f.name} className="flower-img" />
-            <div className="flower-info">
-              <h3>{f.name}</h3>
-              <div className="price-view-wrapper">
-                <p>₱ {f.price.toLocaleString()}</p>
-                 <button
-                  className="flower-view-btn"
-                  onClick={() => handleViewDetails(f)}
-                >
-                  View Details
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-    </div>
-  </>
-)}
+  </section>
+  );
+})}
     </div>
   );
 };

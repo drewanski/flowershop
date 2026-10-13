@@ -158,6 +158,8 @@ const updateProduct = async (id, data, userId) => {
     'price',
     'image',
     'category',
+    'type',
+    'type',
     'isAddon',
     'status',
     'stock',

@@ -41,6 +41,11 @@ const schema = new mongoose.Schema({
     trim: true,
     match: [VALID_PHONE_NUMBER_REGEX, 'Please fill a valid contact number'],
   },
+  homeAddress: {
+    type: String,
+    trim: true,
+    maxlength: 500,
+  },
 
   //==================================//
   // AUTHENTICATION AND AUTHORIZATION //
@@ -71,6 +76,10 @@ const schema = new mongoose.Schema({
     type: String,
     enum: USER_ROLES_ENUM,
     default: USER_ROLES.CUSTOMER,
+  },
+  isDisabled: {
+    type: Boolean,
+    default: false,
   },
 }, { timestamps: true });
 

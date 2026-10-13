@@ -6,10 +6,14 @@ import logo from "../assets/logo_a.png";
 import bg from "../assets/background.png";
 import cartIcon from "../assets/crtlogo.png";
 import accountIcon from "../assets/acntlogo.png";
+import { apiRequest } from "../api";
 
 export default function Cart() {
   const [cartItems, setCartItems] = useState([]);
-  const shippingFee = 200;
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [deliveryAddress, setDeliveryAddress] = useState({ latitude: '', longitude: '', apartmentBuildingLotNumber: '', street: '', barangay: '', city: '', province: '', zipCode: '', riderInstructions: '' });
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const shippingFee = 0;
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -19,45 +23,15 @@ export default function Cart() {
     navigate("/landingmain", { state: { scrollTo: sectionId } });
   };
 
-  // ---------------- Fetch cart from backend ----------------
+  // ---------------- Fetch cart from local storage ----------------
   useEffect(() => {
-    const loadCart = async () => {
-      const currentUser = JSON.parse(localStorage.getItem("user_currentUser"));
-      const isLoggedInFlag = localStorage.getItem("user_isLoggedIn");
-      const loggedIn = currentUser && isLoggedInFlag === "true";
-
-      if (loggedIn) {
-        try {
-          const res = await fetch(`http://localhost:5001/api/cart/${currentUser._id}`);
-          const data = await res.json();
-          setCartItems(data.cart || []);
-        } catch (err) {
-          console.error("Error fetching cart:", err);
-        }
-      } else {
-        // fallback for guests
-        const storedCart = JSON.parse(localStorage.getItem("cartItems")) || [];
-        setCartItems(storedCart);
-      }
-    };
-
-    loadCart();
+    const storedCart = JSON.parse(localStorage.getItem("cartItems")) || [];
+    setCartItems(storedCart);
   }, []);
 
-  // ---------------- Helper: Save cart to backend ----------------
+  // ---------------- Helper: Save cart to local storage ----------------
   const saveCartToBackend = async (updatedCart) => {
-    const currentUser = JSON.parse(localStorage.getItem("user_currentUser"));
-    if (!currentUser) return;
-
-    try {
-      await fetch("http://localhost:5001/api/cart/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: currentUser._id, cart: updatedCart }),
-      });
-    } catch (err) {
-      console.error("Failed to update cart in backend:", err);
-    }
+    localStorage.setItem('cartItems', JSON.stringify(updatedCart));
   };
 
   // ---------------- Quantity controls ----------------
@@ -86,6 +60,55 @@ export default function Cart() {
     const updated = cartItems.filter((item) => item._id !== id);
     setCartItems(updated);
     saveCartToBackend(updated);
+  };
+
+  const handleCheckout = async (event) => {
+    event?.preventDefault();
+    let currentUser;
+    try {
+      currentUser = JSON.parse(localStorage.getItem('user_currentUser') || 'null');
+    } catch (error) {
+      localStorage.removeItem('user_currentUser');
+    }
+    if (!localStorage.getItem('user_token') || currentUser?.role !== 'customer') {
+      alert('Please log in before checking out.');
+      navigate('/account');
+      return;
+    }
+
+    if (!cartItems.length || isCheckingOut) return;
+
+    setIsCheckingOut(true);
+    try {
+      const { ok, data } = await apiRequest('/orders', {
+        method: 'POST',
+        body: JSON.stringify({
+          paymentMethod,
+          deliveryAddress: {
+            ...deliveryAddress,
+            latitude: Number(deliveryAddress.latitude),
+            longitude: Number(deliveryAddress.longitude),
+          },
+          products: cartItems.map((item) => ({
+            product: item._id,
+            quantity: item.quantity,
+            addons: [],
+          })),
+        }),
+      });
+
+      if (!ok) {
+        throw new Error(data?.message || 'Unable to place order.');
+      }
+
+      localStorage.removeItem('cartItems');
+      setCartItems([]);
+      alert(`Order ${data?.payload?.orderNumber || ''} placed successfully.`);
+    } catch (error) {
+      alert(error.message || 'Unable to reach the order service.');
+    } finally {
+      setIsCheckingOut(false);
+    }
   };
 
   // ---------------- Calculate totals ----------------
@@ -207,8 +230,28 @@ export default function Cart() {
               <Link to="/shop">
                 <button className="continue-btn">CONTINUE SHOPPING</button>
               </Link>
-              <button className="checkout-btn">CHECKOUT</button>
+              <select aria-label="Payment method" value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value)}>
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="online">Online</option>
+              </select>
             </div>
+
+            <form className="checkout-address" onSubmit={handleCheckout}>
+              <h2>Delivery Address</h2>
+              <input aria-label="Latitude" type="number" step="any" placeholder="Latitude" required value={deliveryAddress.latitude} onChange={(event) => setDeliveryAddress({ ...deliveryAddress, latitude: event.target.value })} />
+              <input aria-label="Longitude" type="number" step="any" placeholder="Longitude" required value={deliveryAddress.longitude} onChange={(event) => setDeliveryAddress({ ...deliveryAddress, longitude: event.target.value })} />
+              <input aria-label="Unit or lot number" placeholder="Unit / building / lot number" required value={deliveryAddress.apartmentBuildingLotNumber} onChange={(event) => setDeliveryAddress({ ...deliveryAddress, apartmentBuildingLotNumber: event.target.value })} />
+              <input aria-label="Street" placeholder="Street" required value={deliveryAddress.street} onChange={(event) => setDeliveryAddress({ ...deliveryAddress, street: event.target.value })} />
+              <input aria-label="Barangay" placeholder="Barangay" required value={deliveryAddress.barangay} onChange={(event) => setDeliveryAddress({ ...deliveryAddress, barangay: event.target.value })} />
+              <input aria-label="City" placeholder="City" required value={deliveryAddress.city} onChange={(event) => setDeliveryAddress({ ...deliveryAddress, city: event.target.value })} />
+              <input aria-label="Province" placeholder="Province" required value={deliveryAddress.province} onChange={(event) => setDeliveryAddress({ ...deliveryAddress, province: event.target.value })} />
+              <input aria-label="ZIP code" placeholder="ZIP code" required value={deliveryAddress.zipCode} onChange={(event) => setDeliveryAddress({ ...deliveryAddress, zipCode: event.target.value })} />
+              <input aria-label="Delivery instructions" placeholder="Delivery instructions (optional)" value={deliveryAddress.riderInstructions} onChange={(event) => setDeliveryAddress({ ...deliveryAddress, riderInstructions: event.target.value })} />
+              <button className="checkout-btn" type="submit" disabled={!cartItems.length || isCheckingOut}>
+                {isCheckingOut ? 'PLACING ORDER...' : 'CHECKOUT'}
+              </button>
+            </form>
 
             <p className="note">NOTE: Total Amount may still vary once you checked out.</p>
           </div>

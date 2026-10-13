@@ -1,13 +1,13 @@
 import React, { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import bcrypt from "bcryptjs";
 import "./Signin.css";
 import logo from "../assets/logo_a.png";
 import bg from "../assets/background.png";
 import cartIcon from "../assets/crtlogo.png";
 import accountIcon from "../assets/acntlogo.png";
-import { auth } from "../firebase/firebase";
-import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, updateProfile, signOut} from "firebase/auth";
+import { apiRequest } from "../api";
+import { auth, provider } from "../firebase/firebase";
+import { signInWithPopup } from "firebase/auth";
 
 const Toast = ({ message, onClose }) => (
   <div className="signup-toast">
@@ -56,8 +56,8 @@ export default function SignUp() {
 
   // ---------------- Manual Sign-Up ----------------
 const handleManualSignUp = async () => {
-  if (!firstName || !lastName || !phoneNumber || !homeAddress || !signUpEmail || !signUpPassword || !confirmPassword) {
-    showToast("⚠️ Fill in all fields!");
+  if (!firstName || !lastName || !phoneNumber || !signUpEmail || !signUpPassword || !confirmPassword) {
+    showToast("⚠️ Fill in all required fields!");
     return;
   }
 
@@ -67,81 +67,60 @@ const handleManualSignUp = async () => {
   }
 
   try {
-    // 1️⃣ Create Firebase account (just to get UID)
-    const userCredential = await createUserWithEmailAndPassword(auth, signUpEmail, signUpPassword);
-    const user = userCredential.user;
-
-    // 2️⃣ Update displayName in Firebase
-    await updateProfile(user, { displayName: `${firstName} ${lastName}` });
-
-    // 3️⃣ Hash the password before saving to Mongo
-    const hashedPassword = await bcrypt.hash(signUpPassword, 10);
-
-    // 4️⃣ Prepare payload for Mongo
     const payload = {
-      uid: user.uid,
       firstName,
       lastName,
-      phoneNumber,
+      contactNumber: phoneNumber,
       homeAddress,
+      username: `${(signUpEmail.split('@')[0] || `${firstName}${lastName}`).slice(0, 23)}${Math.floor(100000 + Math.random() * 900000)}`,
       email: signUpEmail,
-      password: hashedPassword, // <— use hashed password
-      displayName: `${firstName} ${lastName}`,
-      signInMethod: "manual",
-      photoURL: "" // optional
+      password: signUpPassword,
     };
 
-    // 5️⃣ Save to Mongo
-    const res = await fetch("http://127.0.0.1:5001/api/users/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const { ok, data } = await apiRequest('/auth/register-customer', {
+      method: 'POST',
       body: JSON.stringify(payload),
     });
 
-    const result = await res.json();
-    if (!res.ok) throw new Error(result.message || "Unable to save user");
+    if (!ok) {
+      throw new Error(data?.message || 'Unable to create account');
+    }
 
-    showToast("✅ Account created successfully!");
-    navigate("/login");
+    showToast('✅ Account created successfully!');
+    navigate('/login');
   } catch (err) {
-    console.error("Manual signup error:", err);
-    showToast("⚠️ Unable to save account to database.");
+    console.error('Manual signup error:', err);
+    showToast('⚠️ Unable to save account to database.');
   }
 };
 
   // ---------------- Google Sign-Up ----------------
   const handleGoogleSignUp = async () => {
+    if (!phoneNumber) {
+      showToast('Enter your phone number before using Google sign-up.');
+      return;
+    }
+
     try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      const userObj = {
-        uid: user.uid,
-        firstName: user.displayName?.split(" ")[0] || "",
-        lastName: user.displayName?.split(" ")[1] || "",
-        email: user.email,
-        displayName: user.displayName || "",
-        photoURL: user.photoURL || "",
-        phoneNumber: phoneNumber || "",
-        homeAddress: homeAddress || "",
-        signInMethod: "google"
-      };
-
-      const res = await fetch("http://127.0.0.1:5001/api/users/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userObj),
+      const credential = await signInWithPopup(auth, provider);
+      const idToken = await credential.user.getIdToken();
+      const { ok, data } = await apiRequest('/auth/google', {
+        method: 'POST',
+        body: JSON.stringify({ idToken, contactNumber: phoneNumber, homeAddress }),
       });
 
-      const resultDB = await res.json();
-      if (!res.ok) throw new Error(resultDB.message || "Google signup failed");
-        await signOut(auth);
-      showToast("✅ Google account saved successfully!");
-      navigate("/login"); // navigate to login page
+      if (!ok) throw new Error(data?.message || 'Google sign-up failed.');
+
+      const { user, token } = data.payload;
+      localStorage.setItem('user_token', token);
+      localStorage.setItem('user_currentUser', JSON.stringify(user));
+      localStorage.setItem('user_isLoggedIn', 'true');
+      localStorage.setItem('userType', user.role || 'customer');
+      localStorage.setItem('userEmail', user.email || credential.user.email);
+      navigate('/userinfo');
     } catch (error) {
-      console.error("Google sign-up error:", error.message);
-      showToast("⚠️ Google sign-up failed!");
+      console.error('Google sign-up error:', error);
+      showToast(error.message || 'Google sign-up failed.');
     }
   };
 

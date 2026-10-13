@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"; 
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 //pages
 import Landinglog from "./pages/Landinglog.js"; 
 import Login from "./pages/Login.js"; 
@@ -16,6 +16,20 @@ import Cart from "./pages/Cart.js";
 
 //assets
 import bgMusic from "./assets/music.mp3"; 
+
+const RequireRole = ({ allowedRoles, redirectTo, children }) => {
+  const token = localStorage.getItem('user_token');
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem('user_currentUser') || 'null');
+  } catch (error) {
+    localStorage.removeItem('user_currentUser');
+  }
+
+  if (!token || !user) return <Navigate to={redirectTo} replace />;
+  if (!allowedRoles.includes(user.role)) return <Navigate to="/landingmain" replace />;
+  return children;
+};
 
 
 function App() {
@@ -84,10 +98,11 @@ function App() {
   return (
   <Router>
     <Routes>
-      <Route path="/" element={<AdminLog />} />
+      <Route path="/" element={<Landingmain />} />
+      <Route path="/employee-login" element={<AdminLog />} />
 
         {/* Admin Dashboard */}
-        <Route path="/adminpanel" element={<AdminPanel />} />
+        <Route path="/adminpanel" element={<RequireRole allowedRoles={['admin', 'manager']} redirectTo="/employee-login"><AdminPanel /></RequireRole>} />
 
       {/* Default landing page */}
       <Route path="/landingmain" element={<Landingmain />} />
@@ -95,8 +110,8 @@ function App() {
       <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/shop" element={<FlowerShopPage />} />
-       <Route path="/loguser" element={<LoginUser />} />
-       <Route path="/userinfo" element={<UserInfo/>}/>
+      <Route path="/loguser" element={<RequireRole allowedRoles={['customer']} redirectTo="/account"><LoginUser /></RequireRole>} />
+      <Route path="/userinfo" element={<RequireRole allowedRoles={['customer']} redirectTo="/account"><UserInfo /></RequireRole>} />
          <Route path="/viewdetails" element={<ViewDetails/>}/>
            <Route path="/cart" element={<Cart/>}/>
     </Routes>

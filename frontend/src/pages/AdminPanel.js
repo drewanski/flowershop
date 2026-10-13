@@ -4,6 +4,7 @@ import "../pages/AdminPanel.css";
 import bg from "../assets/background.png";
 import logo from "../assets/logo_a.png";
 import { useNavigate } from "react-router-dom";
+import { apiRequest } from "../api";
 
 export default function AdminPanel() {
   const barChartRef = useRef(null);
@@ -19,6 +20,8 @@ const navigate = useNavigate();
   const [flowers, setFlowers] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [employeeLogs, setEmployeeLogs] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [productDraft, setProductDraft] = useState({ sku: '', name: '', description: '', price: '', image: '', category: '', type: '', stock: '' });
 
   // View states
   const [activeView, setActiveView] = useState("dashboard"); // 'dashboard', 'products', 'customers', 'employeeLogs'
@@ -27,21 +30,22 @@ const navigate = useNavigate();
   useEffect(() => {
     const fetchCounts = async () => {
       try {
-        const [resFlowers, resCategories, resCustomers] = await Promise.all([
-          fetch("http://localhost:5001/api/flowers/count"),
-          fetch("http://localhost:5001/api/flowers/categories/count"),
-          fetch("http://localhost:5001/api/users/count")
-        ]);
+        const { data } = await apiRequest('/products');
+        const items = data?.payload || data || [];
+        const products = Array.isArray(items) ? items : [];
 
-        const dataFlowers = await resFlowers.json();
-        const dataCategories = await resCategories.json();
-        const dataCustomers = await resCustomers.json();
-
-        setFlowerCount(dataFlowers.count);
-        setCategoryCount(dataCategories.count);
-        setCustomerCount(dataCustomers.count);
+        setFlowers(products);
+        setFlowerCount(products.length);
+        setCategoryCount(new Set(products.map((item) => item.category).filter(Boolean)).size);
+        const customersResult = await apiRequest('/admin/customers');
+        const customerItems = customersResult.data?.payload || [];
+        setCustomers(Array.isArray(customerItems) ? customerItems : []);
+        setCustomerCount(Array.isArray(customerItems) ? customerItems.length : 0);
+        const ordersResult = await apiRequest('/orders');
+        const orderItems = ordersResult.data?.payload || [];
+        setOrders(Array.isArray(orderItems) ? orderItems : []);
       } catch (err) {
-        console.error("Failed to fetch counts:", err);
+        console.error('Failed to fetch counts:', err);
       }
     };
     fetchCounts();
@@ -51,57 +55,45 @@ const navigate = useNavigate();
   useEffect(() => {
     const fetchFlowers = async () => {
       try {
-        const res = await fetch("http://localhost:5001/api/flowers");
-        const data = await res.json();
-        setFlowers(data);
+        const { data } = await apiRequest('/products');
+        const items = data?.payload || data || [];
+        setFlowers(Array.isArray(items) ? items : []);
       } catch (err) {
-        console.error("Failed to fetch flowers:", err);
+        console.error('Failed to fetch flowers:', err);
       }
     };
     fetchFlowers();
   }, []);
 
-  // Fetch customers
-  useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        const res = await fetch("http://localhost:5001/api/users");
-        const data = await res.json();
-        setCustomers(data);
-      } catch (err) {
-        console.error("Failed to fetch customers:", err);
-      }
-    };
-    fetchCustomers();
-  }, []);
-
   // Fetch employee logs when view is active
   useEffect(() => {
     if (activeView === "employeeLogs") {
-      const fetchEmployeeLogs = async () => {
-        try {
-          const res = await fetch("http://localhost:5001/api/employeelogs");
-          const data = await res.json();
-          setEmployeeLogs(data);
-        } catch (err) {
-          console.error("Failed to fetch employee logs:", err);
-        }
-      };
-      fetchEmployeeLogs();
+      apiRequest('/admin/employee-logs')
+        .then(({ ok, data }) => {
+          const items = data?.payload || [];
+          setEmployeeLogs(ok && Array.isArray(items) ? items : []);
+        })
+        .catch((err) => console.error('Failed to fetch employee logs:', err));
     }
   }, [activeView]);
 
   // ApexCharts for dashboard
   useEffect(() => {
     if (activeView === "dashboard") {
+      const categories = [...new Set(flowers.map((product) => product.category).filter(Boolean))];
+      const days = Array.from({ length: 7 }, (_, index) => {
+        const date = new Date();
+        date.setDate(date.getDate() - (6 - index));
+        return date;
+      });
       const barOptions = {
-        series: [{ name: "Count", data: [9, 7, 5, 4, 2] }],
+        series: [{ name: "Products", data: categories.map((category) => flowers.filter((product) => product.category === category).length) }],
         chart: { type: "bar", background: "transparent", height: 350, toolbar: { show: false } },
         colors: ["#2962ff", "#d50000", "#2e7d32", "#ff6d00", "#9c27b0"],
         plotOptions: { bar: { distributed: true, borderRadius: 6, columnWidth: "45%" } },
         dataLabels: { enabled: false },
         grid: { borderColor: "#2b3946", yaxis: { lines: { show: true } } },
-        xaxis: { categories: ["Laptop", "Phone", "Monitor", "Headphones", "Camera"], labels: { style: { colors: "#aeb6c0" } } },
+        xaxis: { categories, labels: { style: { colors: "#aeb6c0" } } },
         yaxis: { labels: { style: { colors: "#aeb6c0" } } },
         tooltip: { theme: "dark" },
       };
@@ -110,15 +102,15 @@ const navigate = useNavigate();
 
       const areaOptions = {
         series: [
-          { name: "Purchase Orders", data: [30, 25, 40, 35, 50, 55, 48] },
-          { name: "Sales Orders", data: [20, 45, 60, 38, 45, 65, 53] },
+          { name: "Orders", data: days.map((date) => orders.filter((order) => new Date(order.createdAt).toDateString() === date.toDateString()).length) },
+          { name: "Sales", data: days.map((date) => orders.filter((order) => new Date(order.createdAt).toDateString() === date.toDateString()).reduce((sum, order) => sum + (Number(order.grandTotal) || 0), 0)) },
         ],
         chart: { type: "area", height: 350, background: "transparent", toolbar: { show: false } },
         colors: ["#2e7d32", "#d50000"],
         dataLabels: { enabled: false },
         stroke: { curve: "smooth", width: 3 },
         fill: { type: "gradient", gradient: { opacityFrom: 0.45, opacityTo: 0.05 } },
-        xaxis: { categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"], labels: { style: { colors: "#aeb6c0" } } },
+        xaxis: { categories: days.map((date) => date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })), labels: { style: { colors: "#aeb6c0" } } },
         yaxis: { labels: { style: { colors: "#aeb6c0" } } },
         grid: { borderColor: "#2b3946" },
         tooltip: { theme: "dark" },
@@ -131,17 +123,17 @@ const navigate = useNavigate();
         areaChart.destroy();
       };
     }
-  }, [activeView]);
+  }, [activeView, flowers, orders]);
 
   // Update stock
   const updateStock = async (id, stock) => {
     try {
-      const res = await fetch(`http://localhost:5001/api/flowers/${id}`, {
+      const { ok, data } = await apiRequest(`/products/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ stock: Number(stock) }),
       });
-      const updated = await res.json();
+      if (!ok) throw new Error(data?.message || 'Stock update failed');
+      const updated = data?.payload;
       setFlowers(flowers.map(f => (f._id === id ? updated : f)));
       alert("Stock updated!");
     } catch (err) {
@@ -150,16 +142,41 @@ const navigate = useNavigate();
     }
   };
 
+  const createProduct = async (event) => {
+    event.preventDefault();
+    try {
+      const product = {
+        ...productDraft,
+        price: Number(productDraft.price),
+        stock: Number(productDraft.stock),
+      };
+      const { ok, data } = await apiRequest('/products', {
+        method: 'POST',
+        body: JSON.stringify(product),
+      });
+      if (!ok) throw new Error(data?.message || 'Product creation failed.');
+      const created = data.payload;
+      setFlowers((current) => [...current, created]);
+      setFlowerCount((count) => count + 1);
+      setCategoryCount(new Set([...flowers.map((item) => item.category), created.category]).size);
+      setProductDraft({ sku: '', name: '', description: '', price: '', image: '', category: '', type: '', stock: '' });
+      alert('Product created.');
+    } catch (error) {
+      alert(error.message || 'Unable to create product.');
+    }
+  };
+
   // Update user
   const updateUser = async (user, newData) => {
     try {
-      const res = await fetch(`http://localhost:5001/api/users/${user._id}`, {
+      const { ok, data } = await apiRequest(`/admin/customers/${user._id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newData),
       });
-      const updated = await res.json();
+      if (!ok) throw new Error(data?.message || 'Unable to update customer.');
+      const updated = data.payload;
       setCustomers(customers.map(u => (u._id === updated._id ? updated : u)));
+      setCustomerCount(customers.length);
       alert("User updated!");
     } catch (err) {
       console.error(err);
@@ -172,8 +189,11 @@ const navigate = useNavigate();
   const deleteUser = async user => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
     try {
-      await fetch(`http://localhost:5001/api/users/${user._id}`, { method: "DELETE" });
-      setCustomers(customers.filter(u => u._id !== user._id));
+      const { ok, data } = await apiRequest(`/admin/customers/${user._id}`, { method: "DELETE" });
+      if (!ok) throw new Error(data?.message || 'Unable to delete customer.');
+      const updatedCustomers = customers.filter(u => u._id !== user._id);
+      setCustomers(updatedCustomers);
+      setCustomerCount(updatedCustomers.length);
       alert("User deleted!");
     } catch (err) {
       console.error(err);
@@ -278,13 +298,13 @@ const navigate = useNavigate();
                     <h3>ALERTS</h3>
                     <span className="material-icons-outlined">notification_important</span>
                   </div>
-                  <h2>56</h2>
+                  <h2>{flowers.filter((product) => product.stock <= 5 || product.status === 'out_of_stock').length}</h2>
                 </div>
               </div>
 
               <div className="adminpanel-charts">
                 <div className="adminpanel-chart">
-                  <h2>Tally of Sales</h2>
+                  <h2>Products by Category</h2>
                   <div ref={barChartRef}></div>
                 </div>
                 <div className="adminpanel-chart">
@@ -297,6 +317,19 @@ const navigate = useNavigate();
 
           {/* Products Table */}
           {activeView === "products" && (
+            <>
+            <form className="adminpanel-tables" onSubmit={createProduct}>
+              <h2>Add Product</h2>
+              <input aria-label="SKU" placeholder="SKU" required value={productDraft.sku} onChange={(event) => setProductDraft({ ...productDraft, sku: event.target.value })} />
+              <input aria-label="Name" placeholder="Name" required value={productDraft.name} onChange={(event) => setProductDraft({ ...productDraft, name: event.target.value })} />
+              <input aria-label="Description" placeholder="Description" required value={productDraft.description} onChange={(event) => setProductDraft({ ...productDraft, description: event.target.value })} />
+              <input aria-label="Image URL" placeholder="Image URL" required value={productDraft.image} onChange={(event) => setProductDraft({ ...productDraft, image: event.target.value })} />
+              <input aria-label="Category" placeholder="Category" required value={productDraft.category} onChange={(event) => setProductDraft({ ...productDraft, category: event.target.value })} />
+              <input aria-label="Type" placeholder="Type" value={productDraft.type} onChange={(event) => setProductDraft({ ...productDraft, type: event.target.value })} />
+              <input aria-label="Price" type="number" min="0" step="0.01" placeholder="Price" required value={productDraft.price} onChange={(event) => setProductDraft({ ...productDraft, price: event.target.value })} />
+              <input aria-label="Stock" type="number" min="0" step="1" placeholder="Stock" required value={productDraft.stock} onChange={(event) => setProductDraft({ ...productDraft, stock: event.target.value })} />
+              <button type="submit">Add Product</button>
+            </form>
             <div className="adminpanel-tables">
               <table>
                 <thead>
@@ -308,23 +341,23 @@ const navigate = useNavigate();
                     <th>Category</th>
                     <th>Stock</th>
                     <th>Description</th>
-                    <th>Fillers</th>
-                    <th>Focal Flowers</th>
+                    <th>Add-on Rules</th>
+                    <th>SKU</th>
                     <th>Update Stock</th>
                   </tr>
                 </thead>
                 <tbody>
                   {flowers.map(flower => (
                     <tr key={flower._id}>
-                      <td><img src={flower.img} alt={flower.name} width={80} /></td>
+                      <td><img src={flower.image || flower.img} alt={flower.name} width={80} /></td>
                       <td>{flower.name}</td>
-                      <td>₱ {flower.price.toLocaleString()}</td>
-                      <td>{flower.type}</td>
+                      <td>₱ {(Number(flower.price) || 0).toLocaleString()}</td>
+                      <td>{flower.isAddon ? 'Add-on' : 'Product'}</td>
                       <td>{flower.category}</td>
                       <td>{flower.stock}</td>
                       <td>{flower.description}</td>
-                      <td>{flower.fillers}</td>
-                      <td>{flower.focalFlowers}</td>
+                      <td>{flower.allowedAddons?.length || 0}</td>
+                      <td>{flower.sku}</td>
                       <td>
                         <div className="update-stock">
                           <input type="number" defaultValue={flower.stock} min="0" id={`stock-${flower._id}`} />
@@ -338,6 +371,7 @@ const navigate = useNavigate();
                 </tbody>
               </table>
             </div>
+            </>
           )}
 
           {/* Customers Table */}
@@ -349,8 +383,6 @@ const navigate = useNavigate();
                     <th>Name</th>
                     <th>Email</th>
                     <th>Phone</th>
-                    <th>Address</th>
-                    <th>Sign-in Method</th>
                     <th>Status</th>
                     <th>Actions</th>
                   </tr>
@@ -360,17 +392,14 @@ const navigate = useNavigate();
                     <tr key={user._id}>
                       <td>{user.firstName} {user.lastName}</td>
                       <td>{user.email}</td>
-                      <td>{user.phoneNumber}</td>
-                      <td>{user.homeAddress}</td>
-                      <td>{user.signInMethod}</td>
+                      <td>{user.contactNumber}</td>
                       <td>{user.isDisabled ? "Disabled" : "Active"}</td>
                       <td>
                         <button onClick={() => {
                           const firstName = prompt("First Name:", user.firstName) || user.firstName;
                           const lastName = prompt("Last Name:", user.lastName) || user.lastName;
-                          const phoneNumber = prompt("Phone Number:", user.phoneNumber) || user.phoneNumber;
-                          const homeAddress = prompt("Home Address:", user.homeAddress) || user.homeAddress;
-                          updateUser(user, { firstName, lastName, phoneNumber, homeAddress });
+                          const contactNumber = prompt("Contact Number:", user.contactNumber) || user.contactNumber;
+                          updateUser(user, { firstName, lastName, contactNumber });
                         }}>Edit</button>
                         <button onClick={() => toggleUserStatus(user)}>
                           {user.isDisabled ? "Enable" : "Disable"}
@@ -399,7 +428,7 @@ const navigate = useNavigate();
 <tbody>
   {employeeLogs.map(log => {
     // Safely extract the date string from loginAt
-    const loginTime = log.loginAt ? (log.loginAt.$date ? log.loginAt.$date : log.loginAt) : null;
+    const loginTime = log.createdAt ? (log.createdAt.$date ? log.createdAt.$date : log.createdAt) : null;
     return (
       <tr key={log._id}>
         <td>{log.email || log.employeeName}</td>
