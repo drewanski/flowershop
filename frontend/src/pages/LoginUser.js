@@ -1,9 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";  
+import { clearSession } from '../shoppingSession';
+import OrderProgress from '../components/OrderProgress';
+import { statusLabels, paymentLabel, isActive, addressLabel } from '../orderWorkflow';
+import OrderLines from '../components/OrderLines';
+import StoreHeader from '../components/StoreHeader';
+import './CoffeeShop.css';
+import React, { useEffect, useState, useRef } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";  
 import "./LoginUser.css";
 import { auth } from "../firebase/firebase";
 import { updateProfile } from "firebase/auth";
-import logo from "../assets/logo_a.png";
+import logo from "../assets/coffee-logo.svg";
 import { apiRequest } from "../api";
 
 export default function LoginUser() {
@@ -13,9 +19,22 @@ export default function LoginUser() {
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [profileImage, setProfileImage] = useState(null);
-  const [preview, setPreview] = useState(null);
   const [orderHistory, setOrderHistory] = useState([]);
+  const [orderError,setOrderError]=useState('');
+  const [ordersLoading,setOrdersLoading]=useState(false);
+  const [orderFilter,setOrderFilter]=useState('all');
+  const [cancelling,setCancelling]=useState('');
   const navigate = useNavigate();
+  const notificationLocation = useLocation();
+  const notificationFocus = useRef('');
+  useEffect(() => {
+    const id = new URLSearchParams(notificationLocation.search).get('order');
+    if (!id) { notificationFocus.current = ''; return; }
+    if (notificationFocus.current === id) return;
+    setOrderFilter('all');
+    const target = document.getElementById(`order-${id}`);
+    if (target) { target.scrollIntoView({ behavior: 'smooth', block: 'center' }); notificationFocus.current = id; }
+  }, [notificationLocation.search, orderHistory, orderFilter]);
 
   // Fetch logged-in user
   useEffect(() => {
@@ -30,14 +49,8 @@ export default function LoginUser() {
   if (localUser && isLoggedIn && localStorage.getItem('user_token') && localUser.role === 'customer') {
     setUser(localUser); // use localStorage user
     setName(localUser.displayName || localUser.name || `${localUser.firstName || ''} ${localUser.lastName || ''}`.trim() || "Your Name");
-    const profileKey = localUser._id || localUser.uid;
-    setBio(localStorage.getItem(`bio_${profileKey}`) || "");
-    setProfileImage(localStorage.getItem(`profileImg_${profileKey}`));
-    if (localStorage.getItem('user_token')) {
-      apiRequest('/orders/mine')
-        .then(({ ok, data }) => setOrderHistory(ok && Array.isArray(data?.payload) ? data.payload : []))
-        .catch((error) => console.error('Unable to load order history:', error));
-    }
+    setBio(localUser.bio || '');
+    setProfileImage(localUser.profileImageUrl || '');
     setLoading(false);
     return;
   }
@@ -60,19 +73,6 @@ const handleAccountClick = () => {
   }
 };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert("❌ Image too large! Max 5MB.");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => setPreview(reader.result);
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleSaveProfile = async () => {
     if (!user) return;
     try {
@@ -84,17 +84,14 @@ const handleAccountClick = () => {
           body: JSON.stringify({
             firstName: nameParts[0],
             lastName: nameParts.slice(1).join(' ') || nameParts[0],
+            bio,
+            profileImageUrl: profileImage || '',
           }),
         });
         if (!ok) throw new Error(data?.message || 'Profile update failed.');
         const currentUser = JSON.parse(localStorage.getItem('user_currentUser')) || {};
         localStorage.setItem('user_currentUser', JSON.stringify({ ...currentUser, ...data.payload }));
       }
-      if (preview) {
-        localStorage.setItem(`profileImg_${profileKey}`, preview);
-        setProfileImage(preview);
-      }
-      localStorage.setItem(`bio_${profileKey}`, bio);
       if (auth.currentUser) await updateProfile(auth.currentUser, { displayName: name });
       setEditing(false);
       alert("✅ Profile updated successfully!");
@@ -105,25 +102,24 @@ const handleAccountClick = () => {
     }
   };
 
+  const cancelPendingOrder = async (order) => {
+    if(cancelling || !window.confirm(`Cancel order ${order.orderNumber}?`))return;
+    setCancelling(order._id);
+    try {const {ok,data}=await apiRequest(`/orders/mine/${order._id}/cancel`,{method:'POST',body:JSON.stringify({reason:'Cancelled by customer'})});if(!ok)throw new Error(data?.message || 'Unable to cancel this order.');await refreshOrders();}
+    catch(error){setOrderError(error.message || 'Unable to cancel this order.');}
+    finally{setCancelling('');}
+  };
+  const refreshOrders = async () => {
+    setOrdersLoading(true);
+    try {const {ok,data}=await apiRequest('/orders/mine');if(!ok || !Array.isArray(data?.payload))throw new Error(data?.message || 'Unable to load order history.');setOrderHistory(data.payload);setOrderError('');}
+    catch(error){setOrderError(error.message || 'Unable to reach the order service.');}
+    finally{setOrdersLoading(false);}
+  };
+  useEffect(()=>{if(!user)return undefined;refreshOrders();const timer=setInterval(()=>{if(document.visibilityState==='visible')refreshOrders();},30000);return()=>clearInterval(timer);},[user,notificationLocation.search]);
+
  const handleLogout = async () => {
   try {
-    // Clear all auth-related info from localStorage
-    localStorage.removeItem("user_currentUser");
-    localStorage.removeItem("user_isLoggedIn");
-    localStorage.removeItem("user_token");
-    localStorage.removeItem("currentUserEmail");
-    localStorage.removeItem("currentUserType");
-    localStorage.removeItem("userType");
-    localStorage.removeItem("userEmail");
-
-    // Clear any user-specific localStorage (if you store profile info)
-    if (user?.uid) {
-      const profileKey = user._id || user.uid;
-      localStorage.removeItem(`bio_${profileKey}`);
-      localStorage.removeItem(`profileImg_${profileKey}`);
-    }
-
-    // Clear user state
+    clearSession();
     setUser(null);
 
     // Redirect to landing page
@@ -148,29 +144,12 @@ const handleAccountClick = () => {
 
   return (
     <div className="loginuser-container">
-      <nav className="loginuser-navbar">
-        <img src={logo} alt="Sampaguita Logo" className="login-logo" />
-        <ul className="landing-nav-links">
-          <li><Link to="/landingmain" className="landingmain-link">HOME</Link></li>
-          <li><Link to="/shop" className="landingmain-link">SHOP HERE</Link></li>
-          <li><Link to="/#about" className="landingmain-link">ABOUT US</Link></li>
-          <li><Link to="/#contact" className="landingmain-link">CONTACT</Link></li>
-          <li>
-            <Link
-              to="/account"
-              onClick={(e) => { e.preventDefault(); handleAccountClick(); }}
-              className="landingmain-link"
-            >
-              ACCOUNT
-            </Link>
-          </li>
-        </ul>
-      </nav>
+      <div className="coffee-account-header"><StoreHeader /></div>
 
       <div className="loginuser-left">
         <div className="profile-pic-wrapper">
-          <img src={preview || profileImage || require("../assets/tulips.png")} alt="Profile" className="profile-pic" />
-          {editing && <input type="file" accept="image/*" onChange={handleImageChange} style={{ marginTop: '10px' }} />}
+          <img src={profileImage || require("../assets/coffee-cup.svg")} alt="Profile" className="profile-pic" onError={event=>{event.currentTarget.onerror=null;event.currentTarget.src=require("../assets/coffee-cup.svg");}} />
+          {editing && <input type="url" value={profileImage || ''} onChange={(event) => setProfileImage(event.target.value)} placeholder="Profile image URL" aria-label="Profile image URL" />}
         </div>
 
         {editing ? (
@@ -194,22 +173,29 @@ const handleAccountClick = () => {
       </div>
 
       <div className="loginuser-right">
-          <button className="track-btn" onClick={() => document.querySelector('.order-history-title')?.scrollIntoView({ behavior: 'smooth' })}>TRACK ORDERS</button>
-        <h1 className="order-history-title">Order History</h1>
+        <div className="account-order-actions"><button className="track-btn" onClick={() => document.querySelector('.order-history-title')?.scrollIntoView({ behavior: 'smooth' })}>Track orders</button><button className="track-btn" type="button" onClick={refreshOrders} disabled={ordersLoading}>Refresh orders</button></div>
+        <h1 className="order-history-title">Your coffee orders</h1><p className="workflow-refresh-note">Active orders update every 30 seconds while this page is open.</p><div className="customer-order-filters">{['all','active','past'].map(filter=><button type="button" key={filter} aria-pressed={orderFilter===filter} onClick={()=>setOrderFilter(filter)}>{filter==='all'?'All orders':filter==='active'?'In progress':'Past orders'}</button>)}</div>{orderError&&<p role="alert" className="workflow-error">{orderError}</p>}{ordersLoading&&!orderHistory.length&&<p role="status">Loading your orders...</p>}
+        {orderHistory.length>0&&!orderHistory.some(order=>orderFilter==='all'||(orderFilter==='active'?isActive(order):!isActive(order)))&&<p className="workflow-empty">No orders in this view.</p>}
         <div className="order-list">
-          {orderHistory.length === 0 && <p>No orders yet.</p>}
-          {orderHistory.map((order) => (
-            <div className="order-item" key={order._id}>
+          {orderHistory.length === 0 && <div className="orders-empty"><span aria-hidden="true">☕</span><h2>Your order history will appear here.</h2><p>When you place an order, you can follow its progress from this page.</p><Link to="/shop">Browse the coffee menu</Link></div>}
+          {orderHistory.filter(order=>orderFilter==='all'||(orderFilter==='active'?isActive(order):!isActive(order))).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).map((order) => (
+            <article className="order-item" id={`order-${order._id}`} key={order._id}>
+              <div className="order-card-top"><span className={`order-status order-status-${String(order.status || 'pending').toLowerCase()}`}>{statusLabels[order.status] || order.status}</span><span className="order-date">{new Date(order.createdAt).toLocaleDateString()}</span></div>
               <div className="order-info">
-                <p className="order-name">{order.products?.map((item) => item.product?.name || 'Product').join(', ')}</p>
-                <p className="order-id">Order #: {order.orderNumber}</p>
-                <p className="order-date">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
+                <OrderLines order={order} />
+                <p className="order-id">Order <span>#{order.orderNumber}</span></p>
+                <p className="order-date">Payment · <strong>{paymentLabel(order)}</strong></p>
+                {order.paymentMethod === 'online' && order.paymentStatus === 'pending' && order.status === 'pending' && order.paymentCheckoutUrl && <a className="cancel-order-btn" href={order.paymentCheckoutUrl}>Continue secure payment</a>}
+                {order.status === 'pending' && !(order.paymentMethod==='online'&&order.paymentStatus==='paid'&&order.grandTotal>0) && <button className="cancel-order-btn" type="button" disabled={!!cancelling} onClick={() => cancelPendingOrder(order)}>{cancelling===order._id?'Cancelling...':'Cancel order'}</button>}
               </div>
               <div className="order-meta">
-                <p>Qty: {order.products?.reduce((sum, item) => sum + item.quantity, 0) || 0}</p>
+                <p>{order.products?.reduce((sum, item) => sum + item.quantity, 0) || 0} item(s)</p>
+                {!!order.vouchersApplied?.length && <p className="order-voucher-savings">{order.vouchersApplied.map((applied) => applied.voucher?.voucher?.code).filter(Boolean).join(', ') || 'Voucher'} savings · − ₱ {order.vouchersApplied.reduce((sum, applied) => sum + (Number(applied.discountAmount) || 0), 0).toLocaleString()}</p>}
                 <p>₱ {(Number(order.grandTotal) || 0).toLocaleString()}</p>
               </div>
-            </div>
+              {order.deliveryAddress && <details className="customer-order-delivery"><summary>Delivery details</summary><p>{addressLabel(order.deliveryAddress)}</p>{order.deliveryAddress.riderInstructions&&<p>{order.deliveryAddress.riderInstructions}</p>}</details>}
+              <OrderProgress order={order}/>
+            </article>
           ))}
         </div>
         <button className="logout-btn" onClick={handleLogout}>LOGOUT</button>

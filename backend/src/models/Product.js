@@ -47,6 +47,16 @@ const productSchema = new mongoose.Schema({
     trim: true,
   },
 
+  optionGroups: [{
+    _id: false,
+    name: { type: String, required: true, trim: true, maxlength: 80 },
+    required: { type: Boolean, default: true },
+    choices: [{
+      _id: false,
+      label: { type: String, required: true, trim: true, maxlength: 80 },
+      priceAdjustment: { type: Number, min: 0, default: 0 },
+    }],
+  }],
   isAddon: {
     type: Boolean,
     required: true,

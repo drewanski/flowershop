@@ -1,8 +1,11 @@
+import { saveSession } from '../shoppingSession';
+import StoreHeader from '../components/StoreHeader';
+import './CoffeeShop.css';
 import React, { useState, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./Signin.css";
-import logo from "../assets/logo_a.png";
-import bg from "../assets/background.png";
+import logo from "../assets/coffee-logo.svg";
+import bg from "../assets/coffee-background.svg";
 import cartIcon from "../assets/crtlogo.png";
 import accountIcon from "../assets/acntlogo.png";
 import { apiRequest } from "../api";
@@ -31,6 +34,7 @@ export default function SignUp() {
   const passwordRef = useRef(null);
   const confirmRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const togglePasswordVisibility = (ref) => {
     setShowPassword((prev) => !prev);
@@ -87,10 +91,10 @@ const handleManualSignUp = async () => {
     }
 
     showToast('✅ Account created successfully!');
-    navigate('/login');
+    navigate('/login', { state: location.state });
   } catch (err) {
     console.error('Manual signup error:', err);
-    showToast('⚠️ Unable to save account to database.');
+    showToast(err.message || '⚠️ Unable to create your account.');
   }
 };
 
@@ -112,12 +116,9 @@ const handleManualSignUp = async () => {
       if (!ok) throw new Error(data?.message || 'Google sign-up failed.');
 
       const { user, token } = data.payload;
-      localStorage.setItem('user_token', token);
-      localStorage.setItem('user_currentUser', JSON.stringify(user));
-      localStorage.setItem('user_isLoggedIn', 'true');
-      localStorage.setItem('userType', user.role || 'customer');
-      localStorage.setItem('userEmail', user.email || credential.user.email);
-      navigate('/userinfo');
+      saveSession(user, token);
+      const returnTo = location.state?.from;
+      navigate(user.role === 'customer' && typeof returnTo === 'string' && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/userinfo', { replace: true });
     } catch (error) {
       console.error('Google sign-up error:', error);
       showToast(error.message || 'Google sign-up failed.');
@@ -128,24 +129,12 @@ const handleManualSignUp = async () => {
     <div className="signup-landing" style={{ backgroundImage: `url(${bg})` }}>
       {toastMsg && <Toast message={toastMsg} onClose={() => setToastMsg("")} />}
 
-      <nav className="signup-navbar">
-        <img src={logo} alt="Logo" className="signup-logo" />
-        <ul className="landing-nav-links">
-          <li><Link to="/" className="landingmain-link">HOME</Link></li>
-          <li><a href="#" className="landingmain-link">SHOP HERE</a></li>
-          <li><a href="/#about" className="landingmain-link">ABOUT US</a></li>
-          <li><a href="/#contact" className="landingmain-link">CONTACT</a></li>
-          <li><Link to="/account" className="signup-link-nav">ACCOUNT</Link></li>
-        </ul>
-      </nav>
+      <StoreHeader />
 
-      <div className="signup-navbar-icons">
-        <img src={cartIcon} alt="Cart" className="signup-navbar-icon" />
-        <img src={accountIcon} alt="Account" className="signup-navbar-icon" />
-      </div>
+
 
       <div className="signup-flower-container">
-        <img src={require("../assets/flower.png")} alt="Flower" className="signup-flower-img" />
+        <img src={require("../assets/coffee-cup.svg")} alt="Freshly brewed coffee" className="signup-flower-img" />
       </div>
 
       <div className="signup-subframe-container">
@@ -176,13 +165,13 @@ const handleManualSignUp = async () => {
 
           <div className="signup-input-box">
             <label htmlFor="signupEmail">Email Address</label>
-            <input type="text" id="signupEmail" placeholder="Email Address" value={signUpEmail} onChange={(e) => setSignUpEmail(e.target.value)} />
+              <input type="email" id="signupEmail" placeholder="Email Address" autoComplete="email" value={signUpEmail} onChange={(e) => setSignUpEmail(e.target.value)} />
           </div>
 
           <div className="signup-password-container">
             <div className="signup-input-box">
               <label htmlFor="signUpPassword">Password</label>
-              <input ref={passwordRef} type={showPassword ? "text" : "password"} id="signUpPassword" placeholder="Password" maxLength="16" value={signUpPassword} onChange={(e) => { setSignUpPassword(e.target.value); checkPasswordStrength(e.target.value); }} />
+              <input ref={passwordRef} type={showPassword ? "text" : "password"} id="signUpPassword" placeholder="Password" autoComplete="new-password" value={signUpPassword} onChange={(e) => { setSignUpPassword(e.target.value); checkPasswordStrength(e.target.value); }} />
               <img src={require("../assets/showpassword.png")} alt="Show Password" className={`signup-toggle-password ${showPassword ? "signup-hidden" : ""}`} onClick={() => togglePasswordVisibility(passwordRef)} />
               <img src={require("../assets/hidepassword.png")} alt="Hide Password" className={`signup-toggle-password ${showPassword ? "" : "signup-hidden"}`} onClick={() => togglePasswordVisibility(passwordRef)} />
               <div className="signup-password-strength-lines">
@@ -200,7 +189,7 @@ const handleManualSignUp = async () => {
 
             <div className="signup-input-box">
               <label htmlFor="confirmPassword">Confirm Password</label>
-              <input ref={confirmRef} type={showPassword ? "text" : "password"} id="confirmPassword" placeholder="Confirm Password" maxLength="16" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+              <input ref={confirmRef} type={showPassword ? "text" : "password"} id="confirmPassword" placeholder="Confirm Password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') handleManualSignUp(); }} />
               <img src={require("../assets/showpassword.png")} alt="Show Password" className={`signup-toggle-password ${showPassword ? "signup-hidden" : ""}`} onClick={() => togglePasswordVisibility(confirmRef)} />
               <img src={require("../assets/hidepassword.png")} alt="Hide Password" className={`signup-toggle-password ${showPassword ? "" : "signup-hidden"}`} onClick={() => togglePasswordVisibility(confirmRef)} />
             </div>
@@ -211,7 +200,7 @@ const handleManualSignUp = async () => {
           <div className="signup-divider">OR</div>
 
           <p className="signup-text">
-            Already have an account? <Link to="/login" className="signup-link">Log In</Link>
+            Already have an account? <Link to="/login" state={location.state} className="signup-link">Log In</Link>
           </p>
 
           <button className="signup-image-btn" onClick={handleGoogleSignUp}>

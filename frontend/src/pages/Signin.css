@@ -46,7 +46,7 @@
 
 .signup-nav-links li a {
   text-decoration: none;
-  color: #800000;
+  color: #553725;
   font-size: 16px;
   font-weight: 400;
   transition: 0.3s;
@@ -115,10 +115,10 @@
 
 .signup-card h2 {
   text-align: left;
-  font-family: "League Spartan", sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 40px;
   font-weight: 700;
-  color: #800000;
+  color: #553725;
   margin-bottom: 30px;
   position: relative; /* add this */
   top: -25px; 
@@ -238,7 +238,7 @@
 }
 
 .signup-options input[type="checkbox"] {
-  accent-color: #800000;
+  accent-color: #553725;
   transform: scale(1.1);
   cursor: pointer;
 }
@@ -262,7 +262,7 @@
 }
 
 .signup-btn {
-  background: #800000;
+  background: #553725;
   color: #fff;
   margin-top: 10px;
 }
@@ -320,7 +320,7 @@
 }
 
 .signup-link {
-  color: #800000; 
+  color: #553725; 
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;

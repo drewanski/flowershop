@@ -1,0 +1,30 @@
+import { shoppingStorage } from '../shoppingSession';
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import ViewDetails from './ViewDetails';
+import { apiRequest } from '../api';
+jest.mock('../api', () => ({ apiRequest: jest.fn() }));
+jest.mock('../components/StoreHeader', () => () => <header>Coffee House</header>);
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => ({ useParams:()=>({productId:'coffee1'}), useLocation:()=>({}), useNavigate:()=>mockNavigate, Link:({to,children,...props})=><a href={to} {...props}>{children}</a> }));
+const product = {_id:'coffee1', name:'House Latte',price:150,stock:8,status:'available',category:'Signature Coffee',image:'/images/latte.svg',allowedAddons:[],optionGroups:[{name:'Size',required:true,choices:[{label:'Regular',priceAdjustment:0},{label:'Large',priceAdjustment:30}]}]};
+beforeEach(()=>{localStorage.clear();apiRequest.mockReset();mockNavigate.mockReset();apiRequest.mockResolvedValue({ok:true,data:{payload:product}});});
+test('prices selected sizes and keeps different configurations in separate bag lines',async()=>{
+  render(<ViewDetails />);
+  await screen.findByRole('heading',{name:'House Latte'});
+  fireEvent.click(screen.getByRole('button',{name:/Large/}));
+  fireEvent.click(screen.getByRole('button',{name:'Add to bag'}));
+  fireEvent.click(screen.getByRole('button',{name:'Regular'}));
+  fireEvent.click(screen.getByRole('button',{name:'Add to bag'}));
+  const bag=JSON.parse(shoppingStorage.getItem('cartItems'));
+  expect(bag).toHaveLength(2);
+  expect(bag.map(item=>item.price)).toEqual([180,150]);
+  expect(bag[0].options[0].value).toBe('Large');
+  expect(mockNavigate).toHaveBeenCalledWith('/cart');
+});
+test('an unavailable product response renders a recovery link without crashing',async()=>{
+  apiRequest.mockResolvedValue({ok:false,data:{message:'Coffee unavailable'}});
+  render(<ViewDetails />);
+  expect(await screen.findByRole('alert')).toHaveTextContent('Coffee unavailable');
+  expect(screen.getByRole('link',{name:'Back to the menu'})).toHaveAttribute('href','/shop');
+});

@@ -46,6 +46,16 @@ const schema = new mongoose.Schema({
     trim: true,
     maxlength: 500,
   },
+  bio: {
+    type: String,
+    trim: true,
+    maxlength: 500,
+  },
+  profileImageUrl: {
+    type: String,
+    trim: true,
+    maxlength: 2048,
+  },
 
   //==================================//
   // AUTHENTICATION AND AUTHORIZATION //
@@ -81,6 +91,13 @@ const schema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  tokenVersion: {
+    type: Number,
+    default: 0,
+  },
+  passwordResetOtpHash: { type: String },
+  passwordResetExpiresAt: { type: Date },
+  passwordResetAttempts: { type: Number, default: 0 },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', schema);

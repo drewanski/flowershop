@@ -49,6 +49,16 @@ const googleLogin = async (req, res) => {
   });
 }
 
+const requestPasswordReset = async (req, res) => {
+  const result = await AuthService.requestPasswordReset(req.body?.email);
+  return res.status(result.status).json({ message: result.message });
+}
+
+const confirmPasswordReset = async (req, res) => {
+  const result = await AuthService.confirmPasswordReset(req.body || {});
+  return res.status(result.status).json({ message: result.message });
+}
+
 const updateProfile = async (req, res) => {
   const response = await AuthService.updateProfile(req.user._id, req.body);
   return res.status(response.status).json({
@@ -61,5 +71,7 @@ module.exports = {
   registerCustomer,
   login,
   googleLogin,
+  requestPasswordReset,
+  confirmPasswordReset,
   updateProfile,
 };

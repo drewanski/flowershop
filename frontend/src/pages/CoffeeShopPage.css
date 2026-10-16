@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Questrial:wght@300;400;600&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap');
 
 
 /* General Layout */
@@ -21,7 +19,7 @@
 }
 
 .flower-info h3 {
-  font-family: 'Questrial', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-weight: 400;
   font-size: 17px;
   margin-top: 10px;
@@ -131,7 +129,7 @@
   margin: 30px 0;
   top: -70px;
   position: relative;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Gilda Display', serif;
   text-align: left; 
   padding-left: 60px;
   color: #B88E5C;
@@ -151,7 +149,7 @@
 
 
 .flower-card {
-  background-image: url('../assets/sigblooms.png'); /* Replace with your image path */
+  background: #fffaf2; /* Replace with your image path */
   background-size: cover;
   background-position: center;
   border-radius: 12px;
@@ -163,7 +161,7 @@
 }
 
 .landing-nav-links .active {
-  color: #800000; /* or whatever highlight color */
+  color: #553725; /* or whatever highlight color */
   font-weight: 600;
   /* add other styles to visually show active link */
 }
@@ -188,7 +186,7 @@
   color: #ffffff;
 }
 .flower-info h3 {
-  font-family: 'Questrial', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-weight: 400;
   font-size: 17px;
   margin-top: 10px;

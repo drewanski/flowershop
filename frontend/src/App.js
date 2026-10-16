@@ -1,23 +1,29 @@
-import React, { useEffect, useState, useRef } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { getShoppingScope, STORE_EVENT } from './shoppingSession';
+import { roleHome } from './roleAccess';
+import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 //pages
-import Landinglog from "./pages/Landinglog.js"; 
-import Login from "./pages/Login.js"; 
+import Landinglog from "./pages/Landinglog.js";
+import Login from "./pages/Login.js";
 import Landingmain from "./pages/Landingmain.js";
 import SignUp from "./pages/Signin.js";
-import FlowerShopPage from "./pages/FlowerShopPage.js";
+import CoffeeShopPage from "./pages/CoffeeShopPage.js";
 import LoginUser from "./pages/LoginUser";
-import AdminLog from "./pages/AdminLog.js";
 import AdminPanel from "./pages/AdminPanel";
 import UserInfo from "./pages/LoginUser.js";
 import ViewDetails from './pages/ViewDetails.js';
 import Cart from "./pages/Cart.js";
+import PaymentResult from "./pages/PaymentResult.js";
+import DeliveryPanel from "./pages/DeliveryPanel.js";
+import PasswordReset from "./pages/PasswordReset.js";
 
 
 //assets
-import bgMusic from "./assets/music.mp3"; 
+import Wishlist from './pages/Wishlist';
+import NotificationCenter from './components/NotificationCenter';
 
 const RequireRole = ({ allowedRoles, redirectTo, children }) => {
+  const location = useLocation();
   const token = localStorage.getItem('user_token');
   let user = null;
   try {
@@ -26,97 +32,45 @@ const RequireRole = ({ allowedRoles, redirectTo, children }) => {
     localStorage.removeItem('user_currentUser');
   }
 
-  if (!token || !user) return <Navigate to={redirectTo} replace />;
-  if (!allowedRoles.includes(user.role)) return <Navigate to="/landingmain" replace />;
+  if (!token || !user) return <Navigate to="/login" state={{ from: location.pathname + location.search + location.hash }} replace />;
+  if (!allowedRoles.includes(user.role)) return <Navigate to={roleHome(user.role)} replace />;
   return children;
 };
 
 
 function App() {
-  const [message, setMessage] = useState("");
-  const audioRef = useRef(null);
-  const fadeDuration = 3000; 
-
-
-  useEffect(() => {
-    const audio = audioRef.current;
-
-    if (audio) {
-      audio.volume = 0;
-      audio.currentTime = 30;
-      audio.play().catch((err) => {
-        console.log("Autoplay blocked:", err);
-      });
-
-      fadeIn(audio);
-
-      const interval = setInterval(() => {
-        if (audio.duration && audio.currentTime >= audio.duration - 4) {
-          fadeOut(audio, () => {
-            audio.currentTime = 30;
-            audio.play();
-            audio.volume = 0;
-            fadeIn(audio);
-          });
-        }
-      }, 500);
-
-      return () => {
-        clearInterval(interval);
-        audio.pause();
-        audio.currentTime = 0;
-      };
-    }
-  }, []);
-
-  const fadeIn = (audio) => {
-    let vol = 0;
-    const step = 0.05;
-    const interval = setInterval(() => {
-      if (vol < 1) {
-        vol += step;
-        audio.volume = Math.min(vol, 1);
-      } else {
-        clearInterval(interval);
-      }
-    }, fadeDuration * step); 
-  };
-  const fadeOut = (audio, callback) => {
-    let vol = audio.volume;
-    const step = 0.05;
-    const interval = setInterval(() => {
-      if (vol > 0) {
-        vol -= step;
-        audio.volume = Math.max(vol, 0);
-      } else {
-        clearInterval(interval);
-        if (callback) callback();
-      }
-    }, fadeDuration * step);
-  };
-
+  const [shoppingScope, setShoppingScope] = useState(getShoppingScope);
+  useEffect(() => { const update = () => setShoppingScope(getShoppingScope()); window.addEventListener(STORE_EVENT, update); window.addEventListener('storage', update); return () => { window.removeEventListener(STORE_EVENT, update); window.removeEventListener('storage', update); }; }, []);
   return (
   <Router>
-    <Routes>
+    <NotificationCenter />
+    <Routes key={shoppingScope}>
       <Route path="/" element={<Landingmain />} />
-      <Route path="/employee-login" element={<AdminLog />} />
+      <Route path="/employee-login" element={<Navigate to="/login" replace />} />
+      <Route path="/delivery" element={<RequireRole allowedRoles={['delivery']} redirectTo="/employee-login"><DeliveryPanel /></RequireRole>} />
 
         {/* Admin Dashboard */}
-        <Route path="/adminpanel" element={<RequireRole allowedRoles={['admin', 'manager']} redirectTo="/employee-login"><AdminPanel /></RequireRole>} />
+        <Route path="/adminpanel" element={<RequireRole allowedRoles={['admin', 'manager', 'crew']} redirectTo="/employee-login"><AdminPanel /></RequireRole>} />
 
       {/* Default landing page */}
       <Route path="/landingmain" element={<Landingmain />} />
       <Route path="/account" element={<Landinglog />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/password-reset" element={<PasswordReset />} />
         <Route path="/signup" element={<SignUp />} />
-        <Route path="/shop" element={<FlowerShopPage />} />
+        <Route path="/shop" element={<CoffeeShopPage />} />
+        <Route path="/products/:productId" element={<ViewDetails />} />
+        <Route path="/wishlist" element={<Wishlist />} />
       <Route path="/loguser" element={<RequireRole allowedRoles={['customer']} redirectTo="/account"><LoginUser /></RequireRole>} />
       <Route path="/userinfo" element={<RequireRole allowedRoles={['customer']} redirectTo="/account"><UserInfo /></RequireRole>} />
          <Route path="/viewdetails" element={<ViewDetails/>}/>
-           <Route path="/cart" element={<Cart/>}/>
+          <Route path="/cart" element={<Cart key="cart"/>}/>
+          <Route path="/checkout" element={<RequireRole allowedRoles={['customer']}><Cart key="checkout"/></RequireRole>}/>
+          <Route path="/payment/result" element={<RequireRole allowedRoles={['customer']} redirectTo="/account"><PaymentResult /></RequireRole>} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
 
-    <audio ref={audioRef} src={bgMusic} />
+
   </Router>
     );
   }

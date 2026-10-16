@@ -14,14 +14,14 @@
   font-size: 16px;
   border-radius: 20px;
   cursor: pointer;
-  border: 1px solid #800000;
+  border: 1px solid #553725;
   background: #F8F8F8;
-  color: #800000;
+  color: #553725;
   transition: all 0.3s ease;
 }
 
 .cta-outline-btn:hover {
-  background: #800000;
+  background: #553725;
   color: white;
   transform: scale(1.1);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
@@ -35,15 +35,15 @@
   border-radius: 20px;
   cursor: pointer;
   border: 1px solid transparent;
-  background: #800000;
+  background: #553725;
   color: white;
   transition: all 0.3s ease;
 }
 
 .cta-solid-btn:hover {
-  border: 1px solid #800000;
+  border: 1px solid #553725;
   background: #F8F8F8;
-  color: #800000;
+  color: #553725;
   transform: scale(1.05);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
@@ -130,7 +130,7 @@
 
 .landingmain-link {
   text-decoration: none;
-  color: #800000;
+  color: #553725;
   font-size: 16px;
   font-weight: 400;
   transition: 0.3s;
@@ -262,7 +262,7 @@
 
 .landingmain-scrollable h2 {
   font-family: 'Gilda Display', serif;
-  color: #800000;
+  color: #553725;
   font-size: 42px;
   margin-bottom: 20px;
 }

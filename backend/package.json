@@ -10,13 +10,16 @@
     "dev": "nodemon src/index.js",
     "seed:test-products": "node scripts/seed-test-products.js",
     "test": "jest",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "seed:coffee": "node scripts/seed-storefront-products.js",
+    "migrate:coffee": "node scripts/seed-storefront-products.js --migrate-legacy"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.7.1",
     "firebase-admin": "^14.5.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.8.1",

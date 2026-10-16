@@ -1,6 +1,8 @@
 const VOUCHER_RESPONSES = require('../responses/VoucherResponses').codes;
 const GENERIC_RESPONSES = require('../constants/GenericResponseConstants');
 const VoucherService = require('../services/VoucherService');
+const OrderService = require('../services/OrderService');
+const VoucherResponses = require('../responses/VoucherResponses');
 
 const send = (res, response) => {
   const code = response.code;
@@ -35,8 +37,19 @@ const deleteVoucher = async (req, res) =>
 const claimVoucher = async (req, res) =>
   send(res, await VoucherService.claimVoucher(req.body.code, req.user._id));
 
+const previewVoucherApplication = async (req, res) => {
+  const result = await OrderService.previewVoucherApplication(req.body, req.user._id);
+  if (result.code === 300) {
+    return send(res, VoucherResponses.success(result.payload, result.message));
+  }
+  return res.status(400).json(result);
+};
+
 const getCustomerVouchers = async (req, res) =>
   send(res, await VoucherService.getCustomerVouchers(req.user._id));
+
+const getAvailableVoucherCampaigns = async (req, res) =>
+  send(res, await VoucherService.getAvailableVoucherCampaigns(req.user._id));
 
 const getCustomerVoucher = async (req, res) =>
   send(res, await VoucherService.getCustomerVoucher(req.params.id, req.user._id));
@@ -48,6 +61,8 @@ module.exports = {
   updateVoucher,
   deleteVoucher,
   claimVoucher,
+  previewVoucherApplication,
   getCustomerVouchers,
   getCustomerVoucher,
+  getAvailableVoucherCampaigns,
 };

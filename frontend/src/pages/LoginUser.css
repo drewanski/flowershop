@@ -1,110 +1,58 @@
-.loginuser-container {
-  padding-top: 150px;  /* space for navbar */
-  padding-right: 100px;
-  padding-bottom: 60px;
-  padding-left: 100px;
-  display: flex;
-  gap: 20px;
-  justify-content: space-between;
-  background: url("../assets/background.png");
-  background-size: cover;
-  min-height: 100vh;
-}
+.loginuser-container { min-height: 100vh; display: grid; grid-template-columns: minmax(240px, 310px) minmax(0, 1fr); align-items: start; gap: 28px; padding: 142px clamp(20px, 5vw, 72px) 56px; background: linear-gradient(rgba(250,247,241,.94), rgba(250,247,241,.97)), url("../assets/background.png") center / cover fixed; color: #33231f; font-family: "Poppins", Arial, sans-serif; }
+.loginuser-navbar { position: absolute; top: 0; left: 0; width: 100%; display: flex; align-items: center; gap: 24px; padding: 14px clamp(18px, 3vw, 44px); background: rgba(255,255,255,.84); border-bottom: 1px solid rgba(225,211,197,.7); z-index: 10; }
+.login-logo { width: 205px; max-height: 102px; object-fit: contain; }
+.loginuser-navbar .landing-nav-links { display: flex; flex-wrap: wrap; gap: clamp(14px, 2.2vw, 32px); margin: 0; padding: 0; list-style: none; }
+.loginuser-navbar .landingmain-link { color: #6b1728; text-decoration: none; font-size: 14px; letter-spacing: .02em; }
+.loginuser-navbar .landingmain-link:hover { color: #a2763c; }
+.loginuser-left, .loginuser-right { min-width: 0; background: rgba(255,255,255,.94); border: 1px solid #eadfd4; border-radius: 16px; box-shadow: 0 10px 28px rgba(67,43,37,.07); }
+.loginuser-left { display: flex; flex-direction: column; align-items: center; gap: 15px; padding: 28px 22px; text-align: center; }
+.profile-pic-wrapper { position: relative; }
+.profile-pic { width: 104px; height: 104px; border-radius: 50%; object-fit: cover; border: 3px solid #553725; background: #f5eee7; }
+.profile-pic-wrapper input { display: block; width: 210px; max-width: 100%; margin-top: 10px; }
+.user-name { margin: 4px 0 0; color: #3d2924; font: 600 25px "Gilda Display", Georgia, serif; }
+.user-email { margin: 0; color: #77655e; font-size: 14px; overflow-wrap: anywhere; }
+.bio { margin: 4px 0; color: #5e4d45; line-height: 1.55; }
+.edit-name, .edit-bio { width: 100%; padding: 10px 12px; border: 1px solid #e2d4ca; border-radius: 8px; font: inherit; }
+.edit-bio { resize: vertical; }
+.edit-btn, .save-btn, .logout-btn, .track-btn { min-height: 40px; padding: 10px 16px; border: 1px solid #553725; border-radius: 8px; background: #553725; color: #fff; cursor: pointer; font: 700 13px "Poppins", Arial, sans-serif; transition: background .18s ease, transform .18s ease; }
+.edit-btn:hover, .save-btn:hover, .logout-btn:hover, .track-btn:hover { background: #5f1024; transform: translateY(-1px); }
+.loginuser-right { padding: clamp(20px, 3vw, 34px); }
+.account-order-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.order-history-title { margin: 22px 0 16px; color: #3d2924; font: 600 clamp(28px, 3vw, 36px) "Gilda Display", Georgia, serif; }
+.order-list { display: flex; flex-direction: column; gap: 14px; }
+.order-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px 18px; padding: 18px; border: 1px solid #eadfd4; border-radius: 12px; background: #fffdfa; }
+.order-card-top { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid #f0e7df; }
+.order-status { display: inline-flex; padding: 5px 10px; border-radius: 999px; background: #f5eddf; color: #735328; font-size: 11px; font-weight: 700; text-transform: capitalize; }
+.order-status-delivered, .order-status-paid { background: #e7f1e8; color: #3d6847; }
+.order-status-cancelled, .order-status-failed { background: #fae9e5; color: #9b342c; }
+.order-info p, .order-meta p { margin: 4px 0 8px; }
+.order-name { color: #3d2924; font-size: 16px; font-weight: 700; }
+.order-id, .order-date { color: #806f66; font-size: 13px; }
+.order-id span { color: #5e4d45; }
+.order-date strong { color: #5e4d45; font-weight: 600; text-transform: capitalize; }
+.order-meta { text-align: right; color: #77655e; font-size: 13px; }
+.order-meta p:last-child { color: #553725; font-size: 18px; font-weight: 700; }
+.order-meta .order-voucher-savings { color: #416b3b; font-size: 12px; font-weight: 600; }
+.cancel-order-btn { padding: 7px 10px; border: 1px solid #d7b8b1; border-radius: 7px; background: #fff; color: #8f2a28; cursor: pointer; font: inherit; font-size: 12px; }
+.cancel-order-btn:hover { background: #fff5f1; }
+.order-progress { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 4px; padding-top: 8px; }
+.order-progress-step { position: relative; padding-top: 14px; color: #a89a91; font-size: 10px; text-align: center; text-transform: capitalize; }
+.order-progress-step::before { position: absolute; top: 0; left: 50%; width: 7px; height: 7px; border-radius: 50%; background: #e5d9cf; content: ""; transform: translateX(-50%); }
+.order-progress-step.is-complete { color: #6b1728; font-weight: 700; }
+.order-progress-step.is-complete::before { background: #a2763c; }
+.order-progress-step:not(:last-child)::after { position: absolute; top: 3px; left: calc(50% + 5px); width: calc(100% - 10px); height: 1px; background: #eadfd4; content: ""; }
+.orders-empty { padding: 36px 20px; border: 1px dashed #decec0; border-radius: 12px; background: #fffdfa; text-align: center; }
+.orders-empty > span { color: #b99560; font-size: 30px; }
+.orders-empty h2 { margin: 8px 0 5px; color: #3d2924; font: 600 23px "Gilda Display", Georgia, serif; }
+.orders-empty p { margin: 0 0 14px; color: #77655e; }
+.orders-empty a { color: #553725; font-weight: 700; }
+.order-cancelled-note { grid-column: 1 / -1; margin: 0; color: #9b342c; font-size: 13px; }
+.logout-btn { margin-top: 18px; }
+.loginuser-loading { color: #5e4d45; font-family: "Poppins", Arial, sans-serif; }
+@media (max-width: 760px) { .loginuser-container { grid-template-columns: 1fr; gap: 16px; padding: 132px 16px 32px; } .loginuser-navbar { align-items: flex-start; gap: 12px; padding: 10px 14px; } .login-logo { width: 112px; max-height: 74px; } .loginuser-navbar .landing-nav-links { gap: 8px 14px; padding-top: 18px; } .loginuser-navbar .landingmain-link { font-size: 12px; } .loginuser-left { padding: 22px; } }
+@media (max-width: 460px) { .loginuser-container { padding-top: 145px; } .loginuser-navbar { flex-direction: column; align-items: center; gap: 2px; } .loginuser-navbar .landing-nav-links { justify-content: center; padding-top: 0; } .order-item { padding: 13px; gap: 10px; } .order-progress-step { font-size: 8px; } }
 
-
-.loginuser-left {
-  flex: 1;
-  max-width: 400px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
-  background: rgba(255,255,255,0.6);
-  padding: 30px;
-  border-radius: 15px;
-}
-
-.profile-pic-wrapper {
-  position: relative;
-}
-.profile-pic {
-  width: 130px;
-  height: 130px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid #7c1220;
-}
-
-.edit-name,
-.edit-bio {
-  width: 90%;
-  padding: 8px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-}
-
-.user-email {
-  color: #555;
-}
-
-.edit-btn,
-.save-btn,
-.logout-btn,
-.track-btn {
-  background-color: #7c1220;
-  color: white;
-  border: none;
-  padding: 10px 25px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: 0.3s;
-}
-
-.edit-btn:hover,
-.save-btn:hover,
-.logout-btn:hover,
-.track-btn:hover {
-  opacity: 0.8;
-}
-
-.loginuser-right {
-  flex: 1;
-  padding-left: 50px;
-}
-
-.order-history-title {
-  font-size: 2rem;
-  color: #a37a2d;
-  margin-bottom: 20px;
-}
-
-.order-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.order-item {
-  display: flex;
-  justify-content: space-between;
-  background: #fff;
-  padding: 15px;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-/* Navbar on loginuser page only */
-.loginuser-navbar {
-  position: fixed;       /* keep it on top */
-  top: 0;
-  left: 0;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 20px;
-  padding: 20px 40px;
-  background: transparent; /* follow your style */
-  z-index: 1000;           /* above content */
-}
+.loginuser-container { padding-top:28px; }
+.coffee-account-header { grid-column:1 / -1; margin:-28px calc(-1 * clamp(20px, 5vw, 72px)) 0; }
+.loginuser-container * { box-sizing:border-box; }
+@media(max-width:760px) { .loginuser-container { padding-top:16px; }.coffee-account-header { margin:-16px -16px 0; } }

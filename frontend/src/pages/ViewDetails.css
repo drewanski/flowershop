@@ -43,7 +43,7 @@
   font-size: 50px;
   font-weight: 700;
   color: #c6a15b;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Gilda Display', serif;
   margin-bottom: 0.3rem;
 }
 
@@ -78,6 +78,24 @@
   color: #444;
   line-height: 1.5;
 }
+
+.product-addon-picker {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 14px 16px;
+  border-left: 3px solid #8f1c12;
+  background: rgba(255, 249, 245, .92);
+}
+.product-addon-picker h3 { margin: 0 0 4px; color: #6b0f1a; font: 500 21px "Gilda Display", Georgia, serif; }
+.product-addon-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid rgba(107, 15, 26, .15); }
+.product-addon-row > div:first-child { display: grid; gap: 3px; }
+.product-addon-row strong { color: #4a3a2c; }
+.product-addon-row span { color: #77635a; font-size: 12px; }
+.addon-quantity-control { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+.addon-quantity-control button { width: 30px; height: 30px; border: 1px solid #8f1c12; background: transparent; color: #8f1c12; cursor: pointer; }
+.addon-quantity-control button:disabled { opacity: .4; cursor: not-allowed; }
+.addon-unavailable { margin: 0; color: #8f1c12; font-size: 13px; }
 
 /* === QUANTITY SECTION === */
 .quantity-section {
@@ -269,7 +287,7 @@
 .viewdetails-link {
   text-decoration: none;
   color: #6e0000;
-  font-family: "Questrial", sans-serif;
+  font-family: "Poppins", sans-serif;
   font-weight: 600;
   letter-spacing: 0.5px;
   transition: color 0.3s ease;
@@ -320,3 +338,5 @@
   color: red;
   font-weight: bold;
 }
+
+.ViewDetails-footer { position:relative; height:auto; padding:30px 20px; text-align:center; color:#775b46; background:#e9dfcf; font:14px 'Gilda Display', Georgia, serif; }

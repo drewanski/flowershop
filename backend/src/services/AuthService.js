@@ -227,6 +227,91 @@ const googleLogin = async ({ idToken, contactNumber, homeAddress } = {}) => {
   }
 };
 
+const passwordResetOtpHash = (otp) => crypto
+  .createHash('sha256')
+  .update(`${process.env.JWT_SECRET}:${otp}`)
+  .digest('hex');
+
+const requestPasswordReset = async (emailValue) => {
+  const email = typeof emailValue === 'string' ? emailValue.trim().toLowerCase() : '';
+  if (!isValidEmail(email)) return { status: 400, message: 'Enter a valid email address.' };
+  if (!process.env.BREVO_API_KEY || !process.env.MAIL_FROM) {
+    return { status: 503, message: 'Password reset email is not configured on this server.' };
+  }
+
+  const user = await User.findOne({ email }).select('_id email firstName');
+  if (!user) return { status: 200, message: 'If that account exists, a reset code has been sent.' };
+
+  const otp = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
+  user.passwordResetOtpHash = passwordResetOtpHash(otp);
+  user.passwordResetExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+  user.passwordResetAttempts = 0;
+  await user.save();
+
+  try {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'api-key': process.env.BREVO_API_KEY,
+        'Content-Type': 'application/json',
+        accept: 'application/json',
+      },
+      body: JSON.stringify({
+        sender: { email: process.env.MAIL_FROM },
+        to: [{ email: user.email, name: user.firstName }],
+        subject: 'Your coffee shop password reset code',
+        textContent: `Your password reset code is ${otp}. It expires in 10 minutes. If you did not request this, ignore this email.`,
+      }),
+    });
+    if (!response.ok) throw new Error(`Brevo returned ${response.status}`);
+  } catch (error) {
+    user.passwordResetOtpHash = undefined;
+    user.passwordResetExpiresAt = undefined;
+    user.passwordResetAttempts = 0;
+    await user.save();
+    LogUtils.logError(`Password reset email failed: ${error.message}`);
+    return { status: 502, message: 'Unable to send a password reset email right now.' };
+  }
+
+  return { status: 200, message: 'If that account exists, a reset code has been sent.' };
+};
+
+const confirmPasswordReset = async ({ email: emailValue, otp, newPassword } = {}) => {
+  const email = typeof emailValue === 'string' ? emailValue.trim().toLowerCase() : '';
+  if (!isValidEmail(email) || typeof otp !== 'string' || !/^\d{6}$/.test(otp)
+    || typeof newPassword !== 'string' || newPassword.length < 8) {
+    return { status: 400, message: 'Enter a valid email, six-digit code, and password of at least eight characters.' };
+  }
+
+  const user = await User.findOne({ email }).select('+passwordResetOtpHash passwordResetExpiresAt passwordResetAttempts');
+  if (!user?.passwordResetOtpHash || !user.passwordResetExpiresAt || user.passwordResetExpiresAt <= new Date()) {
+    return { status: 400, message: 'Reset code is invalid or expired. Request a new code.' };
+  }
+  if (user.passwordResetAttempts >= 5) {
+    user.passwordResetOtpHash = undefined;
+    user.passwordResetExpiresAt = undefined;
+    await user.save();
+    return { status: 429, message: 'Too many incorrect codes. Request a new code.' };
+  }
+
+  const submittedHash = passwordResetOtpHash(otp);
+  const expected = Buffer.from(user.passwordResetOtpHash, 'hex');
+  const actual = Buffer.from(submittedHash, 'hex');
+  if (expected.length !== actual.length || !crypto.timingSafeEqual(expected, actual)) {
+    user.passwordResetAttempts += 1;
+    await user.save();
+    return { status: 400, message: 'Reset code is invalid or expired.' };
+  }
+
+  user.password = await encryptPassword(newPassword);
+  user.tokenVersion = (user.tokenVersion || 0) + 1;
+  user.passwordResetOtpHash = undefined;
+  user.passwordResetExpiresAt = undefined;
+  user.passwordResetAttempts = 0;
+  await user.save();
+  return { status: 200, message: 'Password reset successful. Please sign in again.' };
+};
+
 const updateProfile = async (userId, profileData = {}) => {
   const firstName = typeof profileData.firstName === 'string' ? profileData.firstName.trim() : '';
   const lastName = typeof profileData.lastName === 'string' ? profileData.lastName.trim() : '';
@@ -241,6 +326,12 @@ const updateProfile = async (userId, profileData = {}) => {
       lastName,
       ...(typeof profileData.homeAddress === 'string'
         ? { homeAddress: profileData.homeAddress.trim() }
+        : {}),
+      ...(typeof profileData.bio === 'string'
+        ? { bio: profileData.bio.trim() }
+        : {}),
+      ...(typeof profileData.profileImageUrl === 'string'
+        ? { profileImageUrl: profileData.profileImageUrl.trim() }
         : {}),
     },
     { new: true, runValidators: true }
@@ -259,5 +350,7 @@ module.exports = {
   registerCustomer,
   login,
   googleLogin,
+  requestPasswordReset,
+  confirmPasswordReset,
   updateProfile,
 };

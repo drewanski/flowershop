@@ -71,22 +71,22 @@ body {
 
 
 .btn-outline {
-  border: 1px solid #800000;
+  border: 1px solid #553725;
   background: transparent;
-  color: #800000;
+  color: #553725;
 }
 
 .btn-solid {
   border: none;
-  background: #800000;
+  background: #553725;
   color: white;
 }
 
 .btn-outline {
   display: inline-block;
-  border: 1px solid #800000;
+  border: 1px solid #553725;
   background: transparent;
-  color: #800000;
+  color: #553725;
   padding: 10px 20px;
   border-radius: 20px;
   cursor: pointer;
@@ -94,7 +94,7 @@ body {
 }
 
 .btn-outline:hover {
-  background: #800000;
+  background: #553725;
   color: white;
   transform: scale(1.10);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
@@ -104,7 +104,7 @@ body {
 .btn-solid {
   display: inline-block;
   border: 1px solid transparent;
-  background: #800000;
+  background: #553725;
   color: white;
   padding: 10px 20px;
   border-radius: 20px;
@@ -113,9 +113,9 @@ body {
 }
 
 .btn-solid:hover {
-  border: 1px solid #800000;
+  border: 1px solid #553725;
   background: transparent;
-  color: #800000;
+  color: #553725;
   transform: scale(1.05);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
@@ -125,7 +125,7 @@ body {
   font-size: 14px;
   display: inline-block;
   border: 1px solid transparent;
-  background: #800000;
+  background: #553725;
   color: white;
   padding: 10px 20px;
   border-radius: 20px;
@@ -135,9 +135,9 @@ body {
 }
 
 .btn-solid1:hover {
-  border: 1px solid #800000;
+  border: 1px solid #553725;
   background: transparent;
-  color: #800000;
+  color: #553725;
   transform: scale(1.05);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
@@ -173,7 +173,7 @@ body {
 
 .landing-nav-links li a {
   text-decoration: none;
-  color: #800000;
+  color: #553725;
   font-size: 16px;
   font-weight: 400;
   transition: 0.3s;
@@ -238,7 +238,7 @@ body {
 }
 
 .hero-text p {
-  font-family: 'Poppins', serif;
+  font-family: 'Poppins', Arial, sans-serif;
   color: #771427;
   line-height: 0;
 }

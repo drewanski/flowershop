@@ -16,6 +16,7 @@ const adminEmail = `smoke-admin-${tag}@example.com`;
 const customerEmail = `smoke-customer-${tag}@example.com`;
 const contactEmail = `smoke-contact-${tag}@example.com`;
 const productSku = `SMOKE-${tag}`;
+const addonSku = `SMOKE-ADDON-${tag}`;
 
 const uniquePhone = (prefix) => `${prefix}${Math.floor(1000000 + Math.random() * 8999999)}`;
 
@@ -38,6 +39,7 @@ const request = async (path, options = {}) => {
 
 const run = async () => {
   let admin;
+  let deliveryUser;
   let customerId;
   let orderNumber;
 
@@ -53,12 +55,35 @@ const run = async () => {
       password: await encryptPassword('SmokeAdminPass123'),
       role: 'admin',
     });
+    deliveryUser = await User.create({
+      firstName: 'Smoke',
+      lastName: 'Rider',
+      contactNumber: uniquePhone('0919'),
+      username: `smokerider${tag}`,
+      email: `smoke-rider-${tag}@example.com`,
+      password: await encryptPassword('SmokeRiderPass123'),
+      role: 'delivery',
+    });
 
     const adminLogin = await request('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email: adminEmail, password: 'SmokeAdminPass123' }),
     });
     const adminHeaders = { Authorization: `Bearer ${adminLogin.payload.token}` };
+    const addonResult = await request('/products', {
+      method: 'POST',
+      headers: adminHeaders,
+      body: JSON.stringify({
+        sku: addonSku,
+        name: 'Integration Smoke Add-on',
+        description: 'Temporary add-on validation fixture.',
+        price: 2,
+        image: 'https://example.com/smoke-addon.png',
+        category: 'Integration Smoke Test',
+        stock: 6,
+        isAddon: true,
+      }),
+    });
     const productResult = await request('/products', {
       method: 'POST',
       headers: adminHeaders,
@@ -71,6 +96,7 @@ const run = async () => {
         category: 'Integration Smoke Test',
         stock: 3,
         type: 'Smoke Test',
+        allowedAddons: [{ addon: addonResult.payload._id, minQuantity: 1, maxQuantity: 2 }],
       }),
     });
 
@@ -113,41 +139,99 @@ const run = async () => {
           province: 'Metro Manila',
           zipCode: '1000',
         },
-        products: [{ product: productResult.payload._id, quantity: 1, addons: [] }],
+        products: [{ product: productResult.payload._id, quantity: 1, addons: [{ addon: addonResult.payload._id, quantity: 1 }] }],
       }),
     });
     orderNumber = order.payload.orderNumber;
 
+    for (const status of ['confirmed', 'queued', 'ready']) {
+      await request(`/orders/${order.payload._id}/status`, {
+        method: 'PATCH',
+        headers: adminHeaders,
+        body: JSON.stringify({ status }),
+      });
+    }
+    const riderLogin = await request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email: deliveryUser.email, password: 'SmokeRiderPass123' }),
+    });
+    const riderHeaders = { Authorization: `Bearer ${riderLogin.payload.token}` };
+    const availableDeliveries = await request('/orders/delivery/available', { headers: riderHeaders });
+    if (!availableDeliveries.payload.some((item) => item.orderNumber === orderNumber)) {
+      throw new Error('Ready order was not available to delivery staff.');
+    }
+    for (const action of ['claim', 'ship', 'deliver']) {
+      await request(`/orders/delivery/${order.payload._id}/${action}`, {
+        method: 'POST',
+        headers: riderHeaders,
+      });
+    }
+    await request(`/orders/${order.payload._id}/payment`, {
+      method: 'PATCH',
+      headers: adminHeaders,
+      body: JSON.stringify({ paymentStatus: 'paid', paymentAmount: order.payload.grandTotal, paymentChange: 0 }),
+    });
+
     const history = await request('/orders/mine', { headers: customerHeaders });
+    const completedOrder = history.payload.find((item) => item.orderNumber === orderNumber);
+    if (completedOrder?.status !== 'delivered' || completedOrder?.paymentStatus !== 'paid') {
+      throw new Error('Order did not reach delivered and paid completion.');
+    }
     const adminCustomers = await request('/admin/customers', { headers: adminHeaders });
     const employeeLogs = await request('/admin/employee-logs', { headers: adminHeaders });
     const contact = await request('/contact', {
       method: 'POST',
       body: JSON.stringify({ name: 'Smoke Test', email: contactEmail, message: 'Temporary validation message.' }),
     });
+    const paymentMethods = await request('/payments/methods');
+    if (!PaymongoIsConfigured() && paymentMethods.payload.includes('online')) {
+      throw new Error('Online payment was advertised without PayMongo credentials.');
+    }
+    if (!PaymongoIsConfigured()) {
+      const disabledCheckout = await fetch(`${apiBaseUrl}/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...customerHeaders },
+        body: JSON.stringify({
+          paymentMethod: 'online',
+          products: [{ product: productResult.payload._id, quantity: 1, addons: [{ addon: addonResult.payload._id, quantity: 1 }] }],
+        }),
+      });
+      const disabledBody = await disabledCheckout.json();
+      if (disabledCheckout.ok || !disabledBody.message?.includes('not configured')) {
+        throw new Error('Online checkout was not safely disabled without provider credentials.');
+      }
+    }
 
     console.log(`Product creation: ${productResult.message}`);
+    console.log(`Required add-on creation: ${addonResult.message}`);
     console.log(`Customer registration: ${registration.message}`);
     console.log(`Profile update: ${profile.payload.firstName} ${profile.payload.lastName}`);
     console.log(`Checkout: ${order.message}`);
     console.log(`Order appears in history: ${history.payload.some((item) => item.orderNumber === orderNumber)}`);
+    console.log(`End-to-end order completed and paid: ${completedOrder.status}/${completedOrder.paymentStatus}`);
     console.log(`Admin customer results: ${adminCustomers.payload.length}`);
     console.log(`Employee log results: ${employeeLogs.payload.length}`);
     console.log(`Contact submission: ${contact.message}`);
+    console.log(`Payment methods: ${paymentMethods.payload.join(', ')}`);
+    if (!PaymongoIsConfigured()) console.log('Unconfigured online checkout: safely rejected.');
   } finally {
     if (mongoose.connection.readyState === 1) {
       if (customerId) await Order.deleteMany({ user: customerId });
       if (orderNumber) await Order.deleteOne({ orderNumber });
       await Product.deleteOne({ sku: productSku });
-      await EmployeeLog.deleteMany({ email: adminEmail });
+      await Product.deleteOne({ sku: addonSku });
+      await EmployeeLog.deleteMany({ email: { $in: [adminEmail, `smoke-rider-${tag}@example.com`] } });
       await ContactMessage.deleteOne({ email: contactEmail });
       if (admin) await User.deleteOne({ _id: admin._id });
+      if (deliveryUser) await User.deleteOne({ _id: deliveryUser._id });
       await User.deleteOne({ email: customerEmail });
       await mongoose.disconnect();
       console.log('Temporary integration records removed.');
     }
   }
 };
+
+const PaymongoIsConfigured = () => Boolean(process.env.PAYMONGO_SECRET_KEY && process.env.PAYMONGO_WEBHOOK_SECRET);
 
 run().catch((error) => {
   console.error(`Integration smoke test failed: ${error.message}`);

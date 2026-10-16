@@ -14,13 +14,13 @@ const deliveryAddressSchema = new mongoose.Schema(
   {
     latitude: { type: Number, required: true, min: -90, max: 90 },
     longitude: { type: Number, required: true, min: -180, max: 180 },
-    apartmentBuildingLotNumber: { type: String, required: true, trim: true },
+    apartmentBuildingLotNumber: { type: String, trim: true },
     street: { type: String, required: true, trim: true },
     villageSubdivision: { type: String, trim: true },
     barangay: { type: String, required: true, trim: true },
     city: { type: String, required: true, trim: true },
     province: { type: String, required: true, trim: true },
-    zipCode: { type: String, required: true, trim: true },
+    zipCode: { type: String, trim: true },
     riderInstructions: { type: String, trim: true },
   },
   { _id: false }
@@ -37,6 +37,13 @@ const orderSchema = new mongoose.Schema(
           ref: 'Product',
           required: true,
         },
+        productName: { type: String, trim: true },
+        options: [{
+          _id: false,
+          name: { type: String, required: true },
+          value: { type: String, required: true },
+          priceAdjustment: { type: Number, required: true, min: 0 },
+        }],
         productPrice: { type: Number, required: true, min: 0 },
         addons: [
           {
@@ -64,7 +71,7 @@ const orderSchema = new mongoose.Schema(
       },
     ],
     grandTotal: { type: Number, required: true, min: 0 },
-    notes: { type: String, trim: true },
+    notes: { type: String, trim: true, maxlength: 500 },
     deliveryAddress: { type: deliveryAddressSchema },
 
     status: {
@@ -107,6 +114,8 @@ const orderSchema = new mongoose.Schema(
     },
     paymentMethodProvider: { type: String, trim: true },
     paymentReference: { type: String, trim: true },
+    paymentCheckoutSessionId: { type: String, trim: true },
+    paymentCheckoutUrl: { type: String, trim: true },
     paymentAmount: { type: Number, min: 0 },
     paymentChange: { type: Number, min: 0 },
     paidAt: { type: Date },

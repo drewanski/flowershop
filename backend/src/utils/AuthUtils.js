@@ -19,6 +19,7 @@ const passwordsMatch = async (password, hashedPassword) => {
 const generateJWT = (user) => {
   const payload = {
     id: user._id,
+    version: user.tokenVersion || 0,
   };
 
   const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '30d' });
@@ -29,6 +30,7 @@ const verifyJWT = async (token) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).select('-password');
+    if (!user || (decoded.version || 0) !== (user.tokenVersion || 0)) return null;
 
     return user;
   } catch (error) {

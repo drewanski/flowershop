@@ -81,6 +81,10 @@ const voucherSchema = new mongoose.Schema({
     required: true,
     min: 0,
   },
+  newCustomersOnly: {
+    type: Boolean,
+    default: false,
+  },
 
 }, { _id: false });
 

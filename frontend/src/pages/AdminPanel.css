@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap");
 @import url("https://fonts.googleapis.com/icon?family=Material+Icons+Outlined");
 
 /* ---------------- GLOBAL ---------------- */
@@ -11,7 +10,7 @@
   font-family: 'Gilda Display', serif;
   font-weight: 500;
   font-size: 2.5rem;
-  color: #800000;
+  color: #553725;
   letter-spacing: 2px;
   text-transform: uppercase;
   margin-bottom: 30px;
@@ -29,7 +28,7 @@
 /* ---------------- Sidebar ---------------- */
 .adminpanel-sidebar {
   width: 240px;
-  background-color: #F6E9DB;
+  background-color: #f7f1e7;
   display: flex;
   flex-direction: column;
   padding: 20px 0;
@@ -69,7 +68,7 @@
   padding: 12px 25px;
   font-family: 'Poppins', sans-serif;
   font-weight: 500;
-  color: #800000;
+  color: #553725;
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -82,7 +81,7 @@
 
 /* Icons */
 .adminpanel-nav li .material-icons-outlined {
-  color: #800000;
+  color: #553725;
   transition: color 0.3s ease;
 }
 
@@ -199,7 +198,7 @@
   text-align: center;
   color: #ffffff;
   margin-bottom: 15px;
-  font-family: 'Poppins', serif;
+  font-family: 'Poppins', Arial, sans-serif;
   font-weight: 400;
 }
 
@@ -275,6 +274,20 @@
   background-color: #0039cb;
 }
 
+.adminpanel-tables input,
+.adminpanel-tables textarea,
+.adminpanel-tables select {
+  padding: 9px 10px;
+  border: 1px solid rgba(255,255,255,.35);
+  border-radius: 3px;
+  font: inherit;
+}
+.adminpanel-tables textarea { min-height: 70px; min-width: min(100%, 320px); }
+.adminpanel-tables .product-addon-toggle { display: inline-flex; align-items: center; gap: 8px; margin: 8px 12px 8px 0; color: #fff; }
+.adminpanel-tables .product-addon-toggle input { width: 16px; height: 16px; accent-color: #8f1c12; }
+.adminpanel-tables .product-addon-rules { grid-column: 1 / -1; }
+.adminpanel-tables .product-addon-rules textarea { width: 100%; min-height: 82px; }
+
 /* For the stock input and update button */
 .adminpanel-tables .update-stock {
   display: flex;
@@ -298,3 +311,67 @@
 .adminpanel-tables .update-stock button:hover {
   background-color: #1b5e20;
 }
+
+.product-edit-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255, 249, 245, .96);
+  color: #4a3028;
+}
+.product-edit-form label { display: grid; gap: 5px; font-size: 12px; text-transform: capitalize; }
+.product-edit-form input { min-width: 0; padding: 9px; border: 1px solid rgba(107, 15, 26, .35); }
+.adminpanel-tables .product-edit-form button { align-self: end; padding: 9px 12px; background: #8f1c12; }
+
+.voucher-admin-form, .voucher-admin-list { margin: 20px 0; padding: 24px; border: 1px solid rgba(122, 34, 40, .15); border-radius: 16px; background: rgba(255, 252, 248, .97); color: #382823; box-shadow: 0 12px 32px rgba(64, 31, 20, .1); }
+.voucher-admin-heading, .voucher-admin-list-heading, .voucher-admin-card-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.voucher-admin-heading { margin-bottom: 20px; }
+.voucher-admin-heading p { margin: 0 0 4px; color: #967034; font-size: 11px; font-weight: 800; letter-spacing: .15em; }
+.voucher-admin-heading h2, .voucher-admin-list-heading h2 { margin: 0; color: #6f1527; font-family: 'Gilda Display', serif; font-size: 25px; }
+.voucher-admin-heading > span { color: #786b65; font-size: 13px; }
+.voucher-admin-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.voucher-admin-grid label { display: grid; gap: 6px; color: #5a4039; font-size: 12px; font-weight: 700; }
+.voucher-admin-grid input, .voucher-admin-grid select { width: 100%; min-width: 0; padding: 10px 11px; border: 1px solid #e4d4c9; border-radius: 7px; background: #fff; color: #392824; font: inherit; font-weight: 400; }
+.voucher-admin-grid small { color: #81716a; font-weight: 400; }
+.voucher-product-scope { margin: 18px 0; padding: 14px; border: 1px solid #eaded4; border-radius: 9px; }
+.voucher-product-scope legend { padding: 0 5px; color: #6f1527; font-weight: 700; }
+.voucher-product-scope p { margin: 0 0 12px; color: #786b65; font-size: 12px; }
+.voucher-product-scope > div { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px 16px; max-height: 180px; overflow: auto; }
+.voucher-product-scope label { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.voucher-product-scope input { accent-color: #553725; }
+.voucher-new-customer-option { display: flex; grid-column: 1 / -1; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 1px solid #ead9cd; border-radius: 9px; background: #fffaf5; color: #4d292b; font-weight: 700; }
+.voucher-new-customer-option input { width: 17px; height: 17px; margin-top: 2px; accent-color: #553725; }
+.voucher-new-customer-option span { display: grid; gap: 4px; }
+.voucher-new-customer-option small { color: #786a63; font-size: 11px; font-weight: 400; }
+.voucher-admin-actions, .voucher-admin-card-actions { display: flex; gap: 9px; }
+.voucher-admin-actions button, .voucher-admin-list-heading button, .voucher-admin-card-actions button { margin: 0; border-radius: 7px; background: #553725; }
+.voucher-admin-actions .voucher-cancel, .voucher-admin-card-actions .voucher-retire { border: 1px solid #9a3443; background: transparent; color: #553725; }
+.voucher-admin-message { margin: 12px 0 0; color: #634a3f; font-size: 13px; }
+.voucher-admin-list-heading { margin-bottom: 16px; }
+.voucher-admin-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.voucher-admin-card { padding: 18px; border: 1px solid #efe1d8; border-radius: 11px; background: #fff; }
+.voucher-admin-code { color: #9a6d20; font-size: 11px; font-weight: 800; letter-spacing: .12em; }
+.voucher-admin-card h3 { margin: 4px 0 0; color: #4d292b; }
+.voucher-admin-card p { color: #71625c; font-size: 13px; }
+.voucher-admin-offer { color: #6f1527 !important; font-weight: 700; }
+.voucher-admin-meta { display: grid; gap: 4px; padding: 10px 0 14px; color: #756a63; font-size: 11px; }
+.voucher-admin-card-actions button { padding: 7px 11px; font-size: 12px; }
+.voucher-state { flex: 0 0 auto; padding: 5px 8px; border-radius: 999px; background: #e7f1e6; color: #3d6940; font-size: 10px; font-weight: 800; }
+.voucher-state-scheduled { background: #edf1fa; color: #45619a; }
+.voucher-state-expired, .voucher-state-claim-limit-reached { background: #f8e9e8; color: #963d3a; }
+.voucher-empty-state { color: #76665e; }
+
+@media (max-width: 760px) {
+  .product-edit-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .voucher-admin-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .voucher-admin-heading { align-items: flex-start; flex-direction: column; }
+}
+@media (max-width: 520px) {
+  .voucher-admin-grid { grid-template-columns: 1fr; }
+  .voucher-admin-form, .voucher-admin-list { padding: 16px; }
+}
+
+.adminpanel-card.blue { background:#553725; }.adminpanel-card.orange { background:#8b7050; }.adminpanel-card.green { background:#43513d; }.adminpanel-card.red { background:#a6885f; }.adminpanel-card { box-shadow:0 5px 18px #55372514; }.adminpanel-sidebar { box-shadow:2px 0 14px #5537250d; }.adminpanel-content { min-width:0; }.adminpanel-card h2 { font-size:clamp(22px,2.4vw,32px); overflow-wrap:anywhere; }
+
+.adminpanel-chart { background:#fffdf8; border:1px solid #e0d3c2; box-shadow:none; }.adminpanel-chart h2 { color:#553725; font-size:18px; }

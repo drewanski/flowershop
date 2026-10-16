@@ -1,3 +1,4 @@
+const { validateOptionGroups } = require('../utils/CoffeeOptions');
 const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const ProductResponses = require('../responses/ProductResponses');
@@ -81,6 +82,7 @@ const createProduct = async (data, userId) => {
     invalid.push('stock');
   }
 
+  if (data.optionGroups !== undefined && !validateOptionGroups(data.optionGroups)) invalid.push('optionGroups');
   invalid.push(...await validateAddonConfig(data.allowedAddons || []));
 
   if (invalid.length) {
@@ -164,6 +166,7 @@ const updateProduct = async (id, data, userId) => {
     'status',
     'stock',
     'allowedAddons',
+    'optionGroups',
   ];
 
   const updates = Object.fromEntries(
@@ -188,11 +191,21 @@ const updateProduct = async (id, data, userId) => {
     return ProductResponses.invalidData(['stock']);
   }
 
+  if (updates.optionGroups !== undefined && !validateOptionGroups(updates.optionGroups)) return ProductResponses.invalidData(['optionGroups']);
+
   if (updates.allowedAddons !== undefined) {
     const invalid = await validateAddonConfig(updates.allowedAddons);
 
     if (invalid.length) {
       return ProductResponses.invalidData(invalid);
+    }
+  }
+
+  if (updates.stock !== undefined && updates.status === undefined) {
+    const existing = await Product.findById(id).select('status');
+    if (!existing) return ProductResponses.notFound();
+    if (existing.status !== PRODUCT_STATUS.PHASED_OUT) {
+      updates.status = updates.stock > 0 ? PRODUCT_STATUS.AVAILABLE : PRODUCT_STATUS.OUT_OF_STOCK;
     }
   }
 

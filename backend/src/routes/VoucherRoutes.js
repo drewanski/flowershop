@@ -13,6 +13,8 @@ router.post('/', requireToken, requireOperations, VoucherController.createVouche
 router.patch('/:id', requireToken, requireOperations, VoucherController.updateVoucher);
 router.delete('/:id', requireToken, requireOperations, VoucherController.deleteVoucher);
 router.post('/claim', requireToken, requireCustomer, VoucherController.claimVoucher);
+router.post('/customer/preview', requireToken, requireCustomer, VoucherController.previewVoucherApplication);
+router.get('/customer/available', requireToken, requireCustomer, VoucherController.getAvailableVoucherCampaigns);
 router.get('/customer/mine', requireToken, requireCustomer, VoucherController.getCustomerVouchers);
 router.get('/customer/mine/:id', requireToken, requireCustomer, VoucherController.getCustomerVoucher);
 

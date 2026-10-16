@@ -1,12 +1,14 @@
+const { resolveOptions } = require('../utils/CoffeeOptions');
 const mongoose = require('mongoose');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const VoucherInstance = require('../models/VoucherInstance');
-const VoucherTemplate = require('../models/VoucherTemplate');
 const User = require('../models/User');
 const OrderResponses = require('../responses/OrderResponses');
 const GenericResponses = require('../responses/GenericResponses');
 const LogUtils = require('../utils/LogUtils');
+const PaymongoService = require('./PaymongoService');
+const { notifyOrder } = require('./NotificationService');
 const {
   ORDER_STATUS,
   PAYMENT_STATUS,
@@ -34,12 +36,10 @@ const validateAddress = (address = {}) => {
   const fields = [
     'latitude',
     'longitude',
-    'apartmentBuildingLotNumber',
     'street',
     'barangay',
     'city',
     'province',
-    'zipCode',
   ];
 
   const missing = fields.filter(
@@ -168,7 +168,7 @@ const restoreStock = async (order) => {
 };
 
 const validateAndPriceItems = async (items) => {
-  if (!Array.isArray(items) || !items.length) {
+  if (!Array.isArray(items) || !items.length || items.some(item => !item || typeof item !== 'object' || (item.addons !== undefined && (!Array.isArray(item.addons) || item.addons.some(addon => !addon || typeof addon !== 'object'))))) {
     return { invalid: ['products'] };
   }
 
@@ -202,6 +202,9 @@ const validateAndPriceItems = async (items) => {
       invalid.push('products');
       continue;
     }
+
+    const resolved = resolveOptions(product, item.options);
+    if (resolved.error) { invalid.push('products.options'); continue; }
 
     const configured = new Map(
       (product.allowedAddons || []).map((entry) => [String(entry.addon), entry])
@@ -249,7 +252,9 @@ const validateAndPriceItems = async (items) => {
 
     priced.push({
       product: product._id,
-      productPrice: product.price,
+      productPrice: resolved.unitPrice,
+      productName: product.name,
+      options: resolved.options,
       addons,
       quantity: item.quantity,
     });
@@ -260,57 +265,66 @@ const validateAndPriceItems = async (items) => {
     : { items: priced };
 };
 
-const calculateVoucherDiscount = (voucher, items, totalPrice) => {
-  if (totalPrice < voucher.minOrderValue) {
+const roundCurrency = (amount) => Math.round((amount + Number.EPSILON) * 100) / 100;
+
+const calculateVoucherDiscount = (voucher, items, orderSubtotal, remainingTotal) => {
+  if (orderSubtotal < voucher.minOrderValue) {
     return 0;
   }
 
-  if (voucher.allowedProducts?.length) {
-    const qualifies = voucher.allowedProducts.some((rule) =>
-      items.some(
-        (item) =>
-          String(item.product) === String(rule.product) &&
-          item.quantity >= rule.minQuantity &&
-          (rule.addons || []).every((a) =>
-            (item.addons || []).some(
-              (ia) =>
-                String(ia.addon) === String(a.addon) &&
-                ia.quantity >= a.quantity
-            )
-          )
+  const eligibleItems = voucher.allowedProducts?.length
+    ? items.filter((item) => voucher.allowedProducts.some((rule) =>
+      String(item.product) === String(rule.product) &&
+      item.quantity >= rule.minQuantity &&
+      (rule.addons || []).every((required) =>
+        (item.addons || []).some((addon) => String(addon.addon) === String(required.addon) && addon.quantity >= required.quantity)
       )
-    );
-
-    if (!qualifies) {
-      return 0;
-    }
-  }
+    ))
+    : items;
+  const eligibleSubtotal = roundCurrency(eligibleItems.reduce((sum, item) =>
+    sum + item.productPrice * item.quantity + (item.addons || []).reduce((addonSum, addon) => addonSum + addon.addonPrice * addon.quantity * item.quantity, 0), 0));
+  if (!eligibleSubtotal) return 0;
 
   const raw =
     voucher.discountType === DISCOUNT_TYPE.PERCENTAGE
-      ? totalPrice * (voucher.discountValue / 100)
+      ? eligibleSubtotal * (voucher.discountValue / 100)
       : voucher.discountValue;
 
-  return Math.min(raw, voucher.maxDiscountValue, totalPrice);
+  return roundCurrency(Math.min(raw, voucher.maxDiscountValue, eligibleSubtotal, remainingTotal));
 };
 
 const applyVouchers = async (voucherIds, userId, items, totalPrice) => {
-  if (!voucherIds?.length) {
+  if (voucherIds === undefined || voucherIds === null) {
     return { vouchersApplied: [], discount: 0 };
   }
 
   if (!Array.isArray(voucherIds) || voucherIds.some((id) => !isId(id))) {
     return { error: 'Invalid voucher IDs.' };
   }
+  if (!voucherIds.length) return { vouchersApplied: [], discount: 0 };
 
   const unique = [...new Set(voucherIds.map(String))];
-  const vouchers = await VoucherInstance.find({
+  if (unique.length !== voucherIds.length) return { error: 'A voucher can only be selected once.' };
+  if (unique.length > 3) return { error: 'Apply up to three vouchers per order.' };
+  const foundVouchers = await VoucherInstance.find({
     _id: { $in: unique },
     owner: userId,
   });
 
-  if (vouchers.length !== unique.length) {
+  if (foundVouchers.length !== unique.length) {
     return { error: 'One or more vouchers do not belong to this customer.' };
+  }
+  const voucherById = new Map(foundVouchers.map((voucher) => [String(voucher._id), voucher]));
+  const vouchers = unique.map((id) => voucherById.get(id));
+
+  if (vouchers.some((instance) => instance.voucher.newCustomersOnly)) {
+    const previousOrder = await Order.exists({
+      user: userId,
+      status: { $ne: ORDER_STATUS.CANCELLED },
+    });
+    if (previousOrder) {
+      return { error: 'This voucher is for new customers placing their first order.' };
+    }
   }
 
   const applied = [];
@@ -319,18 +333,14 @@ const applyVouchers = async (voucherIds, userId, items, totalPrice) => {
   for (const instance of vouchers) {
     if (
       instance.status !== VOUCHER_STATUS.ACTIVE ||
-      instance.expiresAt < now()
+      instance.expiresAt <= now()
     ) {
       return {
         error: `Voucher ${instance.voucher.code} is unavailable.`,
       };
     }
 
-    const amount = calculateVoucherDiscount(
-      instance.voucher,
-      items,
-      Math.max(totalPrice - discount, 0)
-    );
+    const amount = calculateVoucherDiscount(instance.voucher, items, totalPrice, Math.max(totalPrice - discount, 0));
 
     if (amount <= 0) {
       return {
@@ -345,10 +355,20 @@ const applyVouchers = async (voucherIds, userId, items, totalPrice) => {
     discount += amount;
   }
 
-  return { vouchersApplied: applied, discount };
+  return { vouchersApplied: applied, discount: roundCurrency(discount) };
+};
+
+const previewVoucherApplication = async (data, userId) => {
+  const priced = await validateAndPriceItems(data?.products);
+  if (priced.invalid) return OrderResponses.invalidData(priced.invalid, 'Review your cart before applying vouchers.');
+  const subtotal = roundCurrency(priced.items.reduce((sum, item) => sum + item.productPrice * item.quantity + item.addons.reduce((addonSum, addon) => addonSum + addon.addonPrice * addon.quantity * item.quantity, 0), 0));
+  const result = await applyVouchers(data?.voucherIds || [], userId, priced.items, subtotal);
+  if (result.error) return OrderResponses.voucherInvalid(result.error);
+  return OrderResponses.success({ subtotal, discount: result.discount, total: roundCurrency(Math.max(0, subtotal - result.discount)), vouchersApplied: result.vouchersApplied }, 'Voucher discount calculated.');
 };
 
 const createOrder = async (data, userId) => {
+  if (data?.notes !== undefined && (typeof data.notes !== 'string' || data.notes.length > 500)) return OrderResponses.invalidData(['notes']);
   if (data?.deliveryAddress !== undefined && data.deliveryAddress !== null) {
     const { missing, invalid } = validateAddress(data.deliveryAddress);
 
@@ -371,13 +391,16 @@ const createOrder = async (data, userId) => {
     return OrderResponses.missingData(['paymentMethod']);
   }
 
+  if (!['cash', 'online'].includes(data.paymentMethod)) {
+    return OrderResponses.invalidData(['paymentMethod'], 'Choose cash on delivery or configured online checkout.');
+  }
   const priced = await validateAndPriceItems(data.products);
 
   if (priced.invalid) {
     return OrderResponses.invalidData(priced.invalid);
   }
 
-  const totalPrice = priced.items.reduce(
+  const totalPrice = roundCurrency(priced.items.reduce(
     (sum, item) =>
       sum +
       item.productPrice * item.quantity +
@@ -386,7 +409,7 @@ const createOrder = async (data, userId) => {
         0
       ),
     0
-  );
+  ));
 
   const voucherResult = await applyVouchers(
     data.voucherIds || [],
@@ -399,6 +422,12 @@ const createOrder = async (data, userId) => {
     return OrderResponses.voucherInvalid(voucherResult.error);
   }
 
+  const grandTotal = roundCurrency(Math.max(totalPrice - voucherResult.discount, 0));
+  const paymentRequired = grandTotal > 0;
+  if (data.paymentMethod === 'online' && paymentRequired && !PaymongoService.isConfigured()) {
+    return OrderResponses.invalidData(['paymentMethod'], 'PayMongo checkout is not configured. Choose cash on delivery.');
+  }
+
   const stockError = await reserveStock(aggregateRequirements(priced.items));
 
   if (stockError) {
@@ -407,66 +436,86 @@ const createOrder = async (data, userId) => {
       : GenericResponses.internalServerError();
   }
 
+  let order;
+  const reservedVoucherIds = [];
   try {
     const instanceIds = voucherResult.vouchersApplied.map(
       (item) => item.voucher
     );
 
-    if (instanceIds.length) {
-      const updated = await VoucherInstance.updateMany(
-        {
-          _id: { $in: instanceIds },
-          owner: userId,
-          status: VOUCHER_STATUS.ACTIVE,
-          expiresAt: { $gte: now() },
-        },
-        { $set: { status: VOUCHER_STATUS.USED } }
+    for (const id of instanceIds) {
+      const reserved = await VoucherInstance.findOneAndUpdate(
+        { _id: id, owner: userId, status: VOUCHER_STATUS.ACTIVE, expiresAt: { $gt: now() } },
+        { $set: { status: VOUCHER_STATUS.USED } },
+        { new: true }
       );
-
-      if (updated.modifiedCount !== instanceIds.length) {
-        throw new Error('Voucher reservation failed.');
-      }
+      if (!reserved) throw new Error('A selected voucher was just used or expired. Refresh your vouchers and try again.');
+      reservedVoucherIds.push(id);
     }
 
-    const order = await Order.create({
+    order = await Order.create({
       user: userId,
       orderNumber: await orderNumber(),
       products: priced.items,
-      totalPrice,
+      totalPrice: roundCurrency(totalPrice),
       vouchersApplied: voucherResult.vouchersApplied,
-      grandTotal: Math.max(totalPrice - voucherResult.discount, 0),
+      grandTotal,
       notes: data.notes?.trim() || undefined,
       ...(data.deliveryAddress ? { deliveryAddress: data.deliveryAddress } : {}),
       paymentMethod: data.paymentMethod,
+      ...(data.paymentMethod === 'online' ? { paymentMethodProvider: 'paymongo' } : {}),
+      ...(paymentRequired ? {} : { paymentStatus: PAYMENT_STATUS.PAID, paymentAmount: 0, paymentReference: 'Fully covered by voucher', paymentMethodProvider: 'voucher', paidAt: now(), paidBy: userId }),
       pendingAt: now(),
       pendingBy: userId,
     });
 
     if (instanceIds.length) {
-      await VoucherInstance.updateMany(
-        { _id: { $in: instanceIds } },
+      const linked = await VoucherInstance.updateMany(
+        { _id: { $in: instanceIds }, owner: userId, status: VOUCHER_STATUS.USED, usedInOrder: { $exists: false } },
         { $set: { usedAt: now(), usedInOrder: order._id } }
       );
+      if (linked.modifiedCount !== instanceIds.length) throw new Error('Unable to attach voucher redemption to the order.');
     }
 
-    return OrderResponses.success(
-      await order.populate(
+    if (data.paymentMethod === 'online' && paymentRequired) {
+      const checkout = await PaymongoService.createCheckoutSession({
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        amount: order.grandTotal,
+      });
+      order.paymentCheckoutSessionId = checkout.id;
+      order.paymentCheckoutUrl = checkout.url;
+      await order.save();
+    }
+
+    await order.populate(
         'products.product products.addons.addon vouchersApplied.voucher'
-      ),
-      'Order created successfully.'
+      );
+    await notifyOrder(order, 'created');
+    return OrderResponses.success(
+      order,
+      data.paymentMethod === 'online'
+        && paymentRequired
+        ? 'Order created. Continue to secure PayMongo checkout.'
+        : paymentRequired ? 'Order created successfully.' : 'Order placed. Your voucher covered the full total; no payment is due.'
     );
   } catch (error) {
+    if (order?._id) await Order.deleteOne({ _id: order._id });
     await restoreStock({ products: priced.items });
+    const voucherRollbackFilter = { _id: { $in: reservedVoucherIds }, owner: userId, status: VOUCHER_STATUS.USED };
+    if (order?._id) voucherRollbackFilter.$or = [{ usedInOrder: { $exists: false } }, { usedInOrder: order._id }];
+    else voucherRollbackFilter.usedInOrder = { $exists: false };
     await VoucherInstance.updateMany(
-      {
-        _id: { $in: voucherResult.vouchersApplied.map((v) => v.voucher) },
-        status: VOUCHER_STATUS.USED,
-      },
+      voucherRollbackFilter,
       {
         $set: { status: VOUCHER_STATUS.ACTIVE },
         $unset: { usedAt: 1, usedInOrder: 1 },
       }
     );
+
+    if (error.message.startsWith('A selected voucher was just used or expired.')) {
+      return OrderResponses.voucherInvalid(error.message);
+    }
 
     LogUtils.logError(`Error in createOrder: ${error.message}`);
     return GenericResponses.internalServerError();
@@ -478,6 +527,7 @@ const getCustomerOrders = async (userId) => {
     return OrderResponses.success(
       await Order.find({ user: userId })
         .populate('products.product products.addons.addon')
+        .populate('vouchersApplied.voucher')
         .populate({ path: 'deliveryRider', select: '-password' })
         .sort({ createdAt: -1 })
     );
@@ -495,6 +545,7 @@ const getCustomerOrder = async (id, userId) => {
   try {
     const order = await Order.findOne({ _id: id, user: userId })
       .populate('products.product products.addons.addon')
+      .populate('vouchersApplied.voucher')
       .populate({ path: 'deliveryRider', select: '-password' });
 
     return order
@@ -522,6 +573,7 @@ const getOrders = async (filters = {}) => {
       await Order.find(query)
         .populate({ path: 'user', select: '-password' })
         .populate('products.product products.addons.addon')
+        .populate('vouchersApplied.voucher')
         .populate({ path: 'deliveryRider', select: '-password' })
         .sort({ createdAt: -1 })
     );
@@ -551,6 +603,7 @@ const getDeliveryOrders = async (riderId, mine = false) => {
       await Order.find(query)
         .populate({ path: 'user', select: '-password' })
         .populate('products.product products.addons.addon')
+        .populate('vouchersApplied.voucher')
         .populate({ path: 'deliveryRider', select: '-password' })
         .sort({ createdAt: 1 })
     );
@@ -569,6 +622,7 @@ const getOrder = async (id) => {
     const order = await Order.findById(id)
       .populate({ path: 'user', select: '-password' })
       .populate('products.product products.addons.addon')
+      .populate('vouchersApplied.voucher')
       .populate({ path: 'deliveryRider', select: '-password' });
 
     return order ? OrderResponses.success(order) : OrderResponses.notFound();
@@ -596,6 +650,21 @@ const changeStatus = async (id, status, userId, reason) => {
     return OrderResponses.invalidTransition();
   }
 
+  if (status === ORDER_STATUS.CANCELLED && order.paymentMethod === 'online') {
+    if (order.paymentStatus === PAYMENT_STATUS.PAID && order.grandTotal > 0) {
+      return OrderResponses.invalidTransition('A paid online order needs a refund before it can be cancelled.');
+    }
+    if (order.paymentCheckoutSessionId && !(await PaymongoService.expireCheckoutSession(order.paymentCheckoutSessionId))) {
+      return OrderResponses.invalidTransition('We could not confirm that the payment session is closed. Refresh the order before trying again.');
+    }
+  }
+
+  if (order.paymentMethod === 'online'
+    && order.paymentStatus !== PAYMENT_STATUS.PAID
+    && status !== ORDER_STATUS.CANCELLED) {
+    return OrderResponses.invalidTransition('Online orders cannot be fulfilled before payment is confirmed.');
+  }
+
   if (!isDeliveryOrder && [ORDER_STATUS.SHIPPED, ORDER_STATUS.DELIVERED].includes(status)) {
     return OrderResponses.invalidTransition(
       'In-store orders cannot use delivery-only statuses.'
@@ -619,24 +688,23 @@ const changeStatus = async (id, status, userId, reason) => {
     cancelled: ['cancelledAt', 'cancelledBy'],
   };
 
-  order.status = status;
-
-  if (status === ORDER_STATUS.CANCELLED && reason?.trim()) {
-    order.cancellationReason = reason.trim();
-  }
-
-  if (fieldMap[status]) {
-    order[fieldMap[status][0]] = stamp;
-    order[fieldMap[status][1]] = userId;
-  }
+  const updates = { status };
+  if (status === ORDER_STATUS.CANCELLED && typeof reason === 'string' && reason.trim()) updates.cancellationReason = reason.trim();
+  if (fieldMap[status]) { updates[fieldMap[status][0]] = stamp; updates[fieldMap[status][1]] = userId; }
+  // Only the request that wins this transition may restore stock or vouchers.
+  const filter = { _id: order._id, status: order.status };
+  if (order.paymentMethod === 'online') filter.paymentStatus = order.paymentStatus;
+  const changed = await Order.findOneAndUpdate(filter, { $set: updates }, { returnDocument: 'after', runValidators: true });
+  if (!changed) return OrderResponses.invalidTransition('This order changed in another session. Refresh before updating it.');
 
   if (status === ORDER_STATUS.CANCELLED) {
-    await restoreStock(order);
+    await restoreStock(changed);
 
-    for (const applied of order.vouchersApplied) {
-      const instance = await VoucherInstance.findOneAndUpdate(
+    for (const applied of changed.vouchersApplied) {
+      await VoucherInstance.findOneAndUpdate(
         {
           _id: applied.voucher,
+          usedInOrder: changed._id,
           status: VOUCHER_STATUS.USED,
         },
         {
@@ -645,22 +713,11 @@ const changeStatus = async (id, status, userId, reason) => {
         },
         { new: true }
       );
-
-      if (instance) {
-        await VoucherTemplate.updateOne(
-          {
-            _id: instance.template,
-            usageCountPublic: { $gt: 0 },
-          },
-          { $inc: { usageCountPublic: -1 } }
-        );
-      }
     }
   }
 
-  await order.save();
-
-  return OrderResponses.success(order, `Order ${status} successfully.`);
+  await notifyOrder(changed, `status:${status}`);
+  return OrderResponses.success(changed, `Order ${status} successfully.`);
 };
 
 const cancelCustomerOrder = async (id, userId, reason) => {
@@ -753,6 +810,7 @@ const assignRider = async (id, riderId) => {
     return OrderResponses.notFound();
   }
 
+  await notifyOrder(order, 'assigned');
   return OrderResponses.success(
     order,
     'Delivery rider assigned successfully.'
@@ -793,6 +851,7 @@ const claimOrder = async (id, riderId) => {
       : OrderResponses.notFound();
   }
 
+  await notifyOrder(order, 'status:claimed');
   return OrderResponses.success(order, 'Order claimed successfully.');
 };
 
@@ -839,6 +898,12 @@ const updatePayment = async (id, data, userId) => {
     return OrderResponses.notFound();
   }
 
+  // Online payment state is owned by the signed PayMongo webhook. Staff can
+  // record cash collection, but must not override provider payment state.
+  if (order.paymentMethod === 'online') {
+    return OrderResponses.invalidTransition('Online payments can only be confirmed by the PayMongo webhook.');
+  }
+
   if (
     ![
       PAYMENT_STATUS.PAID,
@@ -847,6 +912,15 @@ const updatePayment = async (id, data, userId) => {
     ].includes(data?.paymentStatus)
   ) {
     return OrderResponses.invalidData(['paymentStatus']);
+  }
+
+  if (order.paymentMethod === 'cash' && order.paymentStatus === PAYMENT_STATUS.PAID) return OrderResponses.invalidTransition('Cash collection has already been recorded.');
+  if (order.paymentMethod === 'cash' && data.paymentStatus === PAYMENT_STATUS.PAID) {
+    if (order.status !== ORDER_STATUS.DELIVERED) return OrderResponses.invalidTransition('Record cash only after delivery is completed.');
+    const amount = data.paymentAmount;
+    const change = data.paymentChange;
+    const validMoney = value => typeof value === 'number' && Number.isFinite(value) && value >= 0 && Math.abs(value * 100 - Math.round(value * 100)) < 0.000001;
+    if (!validMoney(amount) || !validMoney(change) || amount < order.grandTotal || Math.round((amount - order.grandTotal) * 100) !== Math.round(change * 100)) return OrderResponses.invalidData(['paymentAmount', 'paymentChange']);
   }
 
   const invalidPaymentFields = [];
@@ -881,6 +955,7 @@ const updatePayment = async (id, data, userId) => {
 
   await order.save();
 
+  if (order.paymentStatus === PAYMENT_STATUS.PAID) await notifyOrder(order, 'payment:paid');
   return OrderResponses.success(
     order,
     'Payment information updated successfully.'
@@ -900,4 +975,5 @@ module.exports = {
   claimOrder,
   deliveryStatus,
   updatePayment,
+  previewVoucherApplication,
 };
