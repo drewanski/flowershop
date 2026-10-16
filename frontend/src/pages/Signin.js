@@ -4,7 +4,7 @@ import './CoffeeShop.css';
 import React, { useState, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./Signin.css";
-import logo from "../assets/coffee-logo.svg";
+import logo from "../assets/coffee-logo.png";
 import bg from "../assets/coffee-background.svg";
 import cartIcon from "../assets/crtlogo.png";
 import accountIcon from "../assets/acntlogo.png";

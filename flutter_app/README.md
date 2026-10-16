@@ -1,4 +1,4 @@
-# Kape & Co. — Flutter customer app
+# Sampaguita — Flutter customer app
 
 This is a separate Flutter implementation of the **customer side**. It uses the existing Express API, MongoDB accounts, product stock, vouchers, orders and PayMongo payment integration. Admin, crew and rider operations stay in the existing React web application. Staff credentials are rejected by this customer app.
 

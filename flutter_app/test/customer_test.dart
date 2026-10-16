@@ -148,7 +148,7 @@ void main() {
     await store.initialize();
     await tester.pumpWidget(KapeApp(store: store));
     await tester.pumpAndSettle();
-    expect(find.text('Kape & Co.'), findsOneWidget);
+    expect(find.text('Sampaguita'), findsOneWidget);
     await tester.tap(find.text('Orders'));
     await tester.pumpAndSettle();
     expect(find.text('Follow your next cup.'), findsOneWidget);

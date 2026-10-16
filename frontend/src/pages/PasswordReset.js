@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiRequest } from '../api';
-import logo from '../assets/coffee-logo.svg';
+import logo from '../assets/coffee-logo.png';
 import bg from '../assets/coffee-background.svg';
 import './PasswordReset.css';
 
@@ -53,7 +53,7 @@ export default function PasswordReset() {
 
   return (
     <main className="password-reset-page" style={{ backgroundImage: `url(${bg})` }}>
-      <nav className="password-reset-nav"><Link to="/"><img src={logo} alt="Kape & Co." /></Link><Link to="/login">Back to login</Link></nav>
+      <nav className="password-reset-nav"><Link to="/"><img src={logo} alt="Sampaguita" /></Link><Link to="/login">Back to login</Link></nav>
       <section className="password-reset-panel">
         <p className="password-reset-kicker">ACCOUNT SECURITY</p>
         <h1>Reset your password</h1>

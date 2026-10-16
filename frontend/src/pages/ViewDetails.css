@@ -340,3 +340,327 @@
 }
 
 .ViewDetails-footer { position:relative; height:auto; padding:30px 20px; text-align:center; color:#775b46; background:#e9dfcf; font:14px 'Gilda Display', Georgia, serif; }
+
+/* Sampaguita reference design layer */
+
+.viewdetails-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* move content upward */
+  gap: 4rem;
+  padding: 0.5rem 6rem 4rem; /* reduce top padding, keep bottom */
+  position: relative;
+  font-family: "Poppins", sans-serif;
+  color: #4a3a2c;
+  overflow: show;
+}
+
+
+/* === LEFT SIDE (IMAGE) === */
+.viewdetails-image-container {
+  border: 8px solid #e6e1de;
+  border-radius: 12px;
+  padding: 1rem;
+  background-color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.viewdetails-image {
+  width: 380px;
+  height: auto;
+  border-radius: 8px;
+  display: block;
+}
+
+/* === RIGHT SIDE (INFO) === */
+.viewdetails-info {
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 0.8rem;
+  margin-top: -90px;
+}
+
+.flower-title {
+  font-size: 50px;
+  font-weight: 700;
+  color: #c6a15b;
+  font-family: 'Cormorant Garamond', serif;
+  margin-bottom: 0.3rem;
+}
+
+.flower-price {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #2d2d2d;
+  margin-bottom: 0.5rem;
+}
+
+.availability {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  color: #333;
+}
+
+.in-stock {
+  color: #4caf50;
+  font-weight: bold;
+}
+
+.flower-description {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #3a2f24;
+}
+
+.flower-meta {
+  margin-bottom: 1.8rem;
+  font-size: 0.95rem;
+  color: #444;
+  line-height: 1.5;
+}
+
+/* === QUANTITY SECTION === */
+.quantity-section {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.quantity-label {
+  font-weight: 600;
+  color: #3a2f24;
+}
+
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  border: 2px solid #bda177;
+  padding: 0.3rem 1rem;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.quantity-controls button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: #bda177;
+  margin: 0 0.6rem;
+  transition: color 0.3s ease;
+}
+
+.quantity-controls button:hover {
+  color: #7b643f;
+}
+
+.quantity-controls span {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #333;
+}
+
+/* === ACTION BUTTONS === */
+.action-buttons {
+  display: flex;
+  gap: 1.2rem;
+}
+
+.add-cart-btn,
+.add-wishlist-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 2px solid #bda177;
+  padding: 0.8rem 1.8rem;
+  border-radius: 50px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  background: none;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.add-cart-btn {
+  color: #4a3a2c;
+}
+
+.add-cart-btn:hover {
+  background-color: #bda177;
+  color: #fff;
+}
+
+.add-cart-btn.disabled,
+.add-cart-btn:disabled {
+  background-color: #d3d3d3; /* soft gray background */
+  color: #7a7a7a; /* muted gray text */
+  cursor: not-allowed; /* shows "disabled" cursor */
+  pointer-events: none; /* prevents hover or clicks */
+}
+
+.add-wishlist-btn {
+  color: #4a3a2c;
+}
+
+.add-wishlist-btn:hover {
+  background-color: #bda177;
+  color: #fff;
+}
+
+/* === EMPTY STATE === */
+.viewdetails-empty {
+  text-align: center;
+  padding: 5rem;
+  color: #888;
+  font-size: 1.2rem;
+}
+
+/* 🌷 Decorative Footer Section */
+.ViewDetails-footer {
+  position: absolute;
+  bottom: 0;              /* Stays at the bottom of the page */
+  left: 50%;              /* Center horizontally */
+  transform: translateX(-50%);
+  width: 100%;            /* Stretch across full width */
+  display: flex;
+  justify-content: center;
+  z-index: 2;             /* Appear above background */
+}
+
+.ViewDetails-footer img {
+  width: 100%;            /* Adjust to full width of container */
+  max-height: 120px;      /* Limit height so it doesn’t cover content */
+  object-fit: cover;
+  opacity: 0.95;
+  pointer-events: none;
+}
+
+/* === RESPONSIVE FIX === */
+@media (max-width: 1024px) {
+  .viewdetails-container {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 2rem;
+    padding: 2rem;
+  }
+
+  .viewdetails-image {
+    width: 300px;
+  }
+
+  .viewdetails-info {
+    max-width: 90%;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+.flower-navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 50px;
+  background-color: #fffaf8;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.flower-logo {
+  height: 60px;
+}
+
+.viewdetails-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 60px;
+  background-color: #fffaf8;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Logo */
+.viewdetails-logo-img {
+  height: 70px;
+}
+
+/* Center nav links */
+.viewdetails-nav-links {
+  list-style: none;
+  display: flex;
+  gap: 35px;
+  margin: 0;
+  padding: 0;
+}
+
+.viewdetails-link {
+  text-decoration: none;
+  color: #6e0000;
+  font-family: "Questrial", sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: color 0.3s ease;
+}
+
+.viewdetails-link:hover,
+.viewdetails-link.active {
+  color: #a61e1e;
+}
+
+/* Disable scrolling for this page */
+.viewdetails-page {
+  overflow: hidden;
+  height: 100vh;            /* Fixed full screen */
+  width: 100%;
+  position: relative;
+}
+
+
+.ViewDetails-navbar-icons {
+  position: absolute;
+  top: 90px;          /* aligns with navbar */
+  right: 60px;        /* move slightly left from edge */
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  z-index: 1000;
+}
+
+.ViewDetails-navbar-icons .navbar-icon {
+  height: 30px;
+  width: auto;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.ViewDetails-navbar-icons .navbar-icon:hover {
+  transform: scale(1.1);
+}
+
+.in-stock {
+  color: green;
+  font-weight: bold;
+}
+
+.out-of-stock {
+  color: red;
+  font-weight: bold;
+}

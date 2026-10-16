@@ -4,7 +4,7 @@ import OrderLines from '../components/OrderLines';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { apiRequest } from '../api';
-import logo from '../assets/coffee-logo.svg';
+import logo from '../assets/coffee-logo.png';
 import './DeliveryPanel.css';
 
 export default function DeliveryPanel() {
@@ -56,7 +56,7 @@ export default function DeliveryPanel() {
   return (
     <main className="delivery-workspace">
       <header className="delivery-header">
-        <img src={logo} alt="Kape & Co." />
+        <img src={logo} alt="Sampaguita" />
         <div className="delivery-header-actions">
           <span>Delivery workspace</span>
           <button type="button" onClick={logout}>Log out</button>

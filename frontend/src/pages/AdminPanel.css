@@ -375,3 +375,305 @@
 .adminpanel-card.blue { background:#553725; }.adminpanel-card.orange { background:#8b7050; }.adminpanel-card.green { background:#43513d; }.adminpanel-card.red { background:#a6885f; }.adminpanel-card { box-shadow:0 5px 18px #55372514; }.adminpanel-sidebar { box-shadow:2px 0 14px #5537250d; }.adminpanel-content { min-width:0; }.adminpanel-card h2 { font-size:clamp(22px,2.4vw,32px); overflow-wrap:anywhere; }
 
 .adminpanel-chart { background:#fffdf8; border:1px solid #e0d3c2; box-shadow:none; }.adminpanel-chart h2 { color:#553725; font-size:18px; }
+
+/* Sampaguita reference design layer */
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap");
+@import url("https://fonts.googleapis.com/icon?family=Material+Icons+Outlined");
+
+/* ---------------- GLOBAL ---------------- */
+.adminpanel-dashboard * {
+  box-sizing: border-box;
+}
+
+
+.adminpanel-content h1 {
+  font-family: 'Gilda Display', serif;
+  font-weight: 500;
+  font-size: 2.5rem;
+  color: #800000;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 30px;
+  margin-top: 10px;
+}
+
+.adminpanel-dashboard {
+  display: flex;
+  background-color: rgba(246, 233, 219, 0.3);
+  color: #000000;
+  font-family: "Poppins", sans-serif;
+  min-height: 100vh;
+}
+
+/* ---------------- Sidebar ---------------- */
+.adminpanel-sidebar {
+  width: 240px;
+  background-color: #F6E9DB;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.adminpanel-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 25px 0;
+}
+
+.adminpanel-logo {
+  width: 190px;
+  height: auto;
+  object-fit: contain;
+}
+
+.adminpanel-sidebar-header h2 {
+  margin: 0;
+  font-weight: 700;
+  font-size: 20px;
+}
+
+/* ---------------- Nav ---------------- */
+.adminpanel-nav {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+}
+
+.adminpanel-nav li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 25px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  color: #800000;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.adminpanel-nav li:hover {
+  background-color: rgba(128, 0, 0, 0.85);
+  color: #ffffff;
+  border-radius: 8px;
+}
+
+/* Icons */
+.adminpanel-nav li .material-icons-outlined {
+  color: #800000;
+  transition: color 0.3s ease;
+}
+
+.adminpanel-nav li:hover .material-icons-outlined {
+  color: #ffffff;
+}
+
+/* ---------------- Main Area ---------------- */
+.adminpanel-main {
+  flex: 1;
+  color: #fff;
+  padding: 30px;
+  overflow-y: auto;
+  background-image: url("../assets/background.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: transparent;
+}
+
+/* Header */
+.adminpanel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+}
+
+.adminpanel-header-left,
+.adminpanel-header-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.material-icons-outlined {
+  color: #9ea7b0;
+  cursor: pointer;
+}
+
+/* Content */
+.adminpanel-content {
+  padding: 25px 40px;
+  overflow-y: auto;
+}
+
+/* Dashboard Cards */
+.adminpanel-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.adminpanel-card {
+  border-radius: 10px;
+  padding: 20px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.adminpanel-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Card Icon Colors */
+.adminpanel-card.red .material-icons-outlined,
+.adminpanel-card.blue .material-icons-outlined,
+.adminpanel-card.orange .material-icons-outlined,
+.adminpanel-card.green .material-icons-outlined {
+  color: #ffffff;
+}
+
+/* Card Colors */
+.adminpanel-card.blue {
+  background-color: #8F1C12;
+}
+.adminpanel-card.orange {
+  background-color: #BF4341;
+}
+.adminpanel-card.green {
+  background-color: #839863;
+}
+.adminpanel-card.red {
+  background-color: #D0C878;
+}
+
+.adminpanel-card h2 {
+  margin-top: 15px;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+/* ---------------- Charts ---------------- */
+.adminpanel-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+}
+
+.adminpanel-chart {
+  background: #263043;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+}
+
+.adminpanel-chart h2 {
+  text-align: center;
+  color: #ffffff;
+  margin-bottom: 15px;
+  font-family: 'Poppins', serif;
+  font-weight: 400;
+}
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 992px) {
+  .adminpanel-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .adminpanel-charts {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .adminpanel-sidebar {
+    display: none;
+  }
+
+  .adminpanel-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* Products Table Styling */
+.adminpanel-tables {
+  margin-top: 20px;
+  overflow-x: auto; /* horizontal scroll if needed */
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.7); /* solid background so text is visible */
+  border-radius: 10px;
+}
+
+.adminpanel-tables h2 {
+  color: #fff;
+  margin-bottom: 15px;
+}
+
+.adminpanel-tables table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #f1f1f1; /* brighter text for visibility */
+  text-align: left;
+  min-width: 700px; /* ensures horizontal layout */
+}
+
+.adminpanel-tables th,
+.adminpanel-tables td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #555;
+}
+
+.adminpanel-tables th {
+  background-color: #1f1f1f; /* darker header */
+}
+
+.adminpanel-tables tr:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.adminpanel-tables button {
+  background-color: #2962ff;
+  color: #fff;
+  border: none;
+  padding: 8px 15px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.adminpanel-tables button:hover {
+  background-color: #0039cb;
+}
+
+/* For the stock input and update button */
+.adminpanel-tables .update-stock {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.adminpanel-tables .update-stock input {
+  width: 80px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  border: none;
+  text-align: center;
+}
+
+.adminpanel-tables .update-stock button {
+  background-color: #2e7d32;
+  padding: 5px 12px;
+}
+
+.adminpanel-tables .update-stock button:hover {
+  background-color: #1b5e20;
+}

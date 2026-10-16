@@ -9,7 +9,7 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import "./LoginUser.css";
 import { auth } from "../firebase/firebase";
 import { updateProfile } from "firebase/auth";
-import logo from "../assets/coffee-logo.svg";
+import logo from "../assets/coffee-logo.png";
 import { apiRequest } from "../api";
 
 export default function LoginUser() {

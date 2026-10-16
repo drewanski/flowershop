@@ -34,7 +34,7 @@ const createCheckoutSession = async ({ orderId, orderNumber, amount }) => {
           line_items: [{
             currency: 'PHP',
             amount: Math.round(amount * 100),
-            name: `Kape & Co. order ${orderNumber}`,
+            name: `Sampaguita order ${orderNumber}`,
             quantity: 1,
           }],
           payment_method_types: ['card', 'gcash', 'qrph'],

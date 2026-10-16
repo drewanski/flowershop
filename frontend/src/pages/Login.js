@@ -162,12 +162,12 @@ const handleGoogleLogin = async () => {
       <main className="auth-login-layout">
         <section className="auth-login-story" aria-label="Your everyday coffee ritual">
           <img src="/images/products/latte.webp" alt="Freshly poured latte with delicate rosetta art" />
-          <div className="auth-login-story-top"><span>KAPE & CO.</span><span>COFFEE, CONNECTION, EVERY DAY.</span></div>
+          <div className="auth-login-story-top"><span>Sampaguita</span><span>COFFEE, CONNECTION, EVERY DAY.</span></div>
           <div className="auth-login-story-copy"><p>YOUR DAILY MOMENT</p><h1>A familiar cup.<br />A warm welcome.</h1><p>Good coffee brings us together. Your next little pause starts here.</p><Link to="/shop">Explore our coffee <span aria-hidden="true">&#8599;</span></Link></div>
         </section>
         <section className="auth-login-panel" aria-labelledby="login-heading">
           <div className="auth-login-form-wrap">
-            <p className="auth-login-eyebrow">WELCOME TO KAPE & CO.</p>
+            <p className="auth-login-eyebrow">WELCOME TO Sampaguita</p>
             <h2 id="login-heading">Welcome back.</h2>
             <p className="auth-login-intro">Sign in for your next coffee moment.</p>
             <form onSubmit={(event) => { event.preventDefault(); handleLogin(); }}>
@@ -190,7 +190,7 @@ const handleGoogleLogin = async () => {
           </div>
         </section>
       </main>
-      <footer className="auth-login-footer"><span>Good coffee. Everyday moments.</span><span>&copy; {new Date().getFullYear()} Kape & Co.</span></footer>
+      <footer className="auth-login-footer"><span>Good coffee. Everyday moments.</span><span>&copy; {new Date().getFullYear()} Sampaguita</span></footer>
     </div>
   );
 }

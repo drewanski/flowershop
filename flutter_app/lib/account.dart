@@ -412,7 +412,7 @@ class _ContactScreenState extends State<ContactScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Contact Kape & Co.')),
+    appBar: AppBar(title: const Text('Contact Sampaguita')),
     body: PageBody(
       children: [
         const Heading(

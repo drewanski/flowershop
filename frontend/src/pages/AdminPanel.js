@@ -8,7 +8,7 @@ import ApexCharts from "apexcharts";
 import "../pages/AdminPanel.css";
 import '../components/AdminDataViews.css';
 import bg from "../assets/coffee-background.svg";
-import logo from "../assets/coffee-logo.svg";
+import logo from "../assets/coffee-logo.png";
 import { useNavigate, useLocation } from "react-router-dom";
 import { apiRequest } from "../api";
 
@@ -399,7 +399,7 @@ const navigate = useNavigate();
         </header>
 
         <section className="adminpanel-content">
-          <p className="admin-page-eyebrow">KAPE &amp; CO. / OPERATIONS</p>
+          <p className="admin-page-eyebrow">SAMPAGUITA / OPERATIONS</p>
           <h1>
             {activeView === "dashboard" && "Overview"}
             {activeView === "products" && "Products"}

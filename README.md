@@ -1,4 +1,4 @@
-# Kape & Co.
+# Sampaguita
 
 ## Online payments
 
