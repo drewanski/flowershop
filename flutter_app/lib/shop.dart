@@ -57,7 +57,7 @@ class _MenuScreenState extends State<MenuScreen> {
           Container(
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-              color: sage,
+              color: espresso,
               borderRadius: BorderRadius.circular(22),
             ),
             child: Row(
@@ -69,7 +69,7 @@ class _MenuScreenState extends State<MenuScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'YOUR DAILY MOMENT',
+                          'SAMPAGUITA  •  SIGNATURE COLLECTION',
                           style: TextStyle(
                             color: Color(0xffe4d5bc),
                             letterSpacing: 2,
@@ -100,7 +100,7 @@ class _MenuScreenState extends State<MenuScreen> {
                     width: 190,
                     height: 230,
                     child: Image.asset(
-                      'assets/images/latte.webp',
+                      'assets/sampaguita/flower.png',
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -109,13 +109,13 @@ class _MenuScreenState extends State<MenuScreen> {
           ),
           gap(24),
           const Heading(
-            'The coffee menu.',
-            'Pick your brew. Choose your size. Make it your own.',
+            'The signature collection.',
+            'Find something beautiful for someone special.',
           ),
           TextField(
             decoration: const InputDecoration(
               prefixIcon: Icon(Icons.search),
-              hintText: 'Search coffee, flavors, or beans',
+              hintText: 'What are you looking for?',
             ),
             onChanged: (value) => setState(() => query = value),
           ),
@@ -138,7 +138,7 @@ class _MenuScreenState extends State<MenuScreen> {
             children: [
               Expanded(
                 child: Text(
-                  '${results.length} coffees to explore',
+                  '${results.length} items to explore',
                   style: const TextStyle(fontSize: 12),
                 ),
               ),
@@ -163,7 +163,7 @@ class _MenuScreenState extends State<MenuScreen> {
           gap(),
           if (results.isEmpty)
             const EmptyState(
-              'No cups found.',
+              'No items found.',
               'Try a different search or category.',
             )
           else
@@ -191,7 +191,7 @@ class _MenuScreenState extends State<MenuScreen> {
             ),
           gap(20),
           const Text(
-            'Available sizes and extras are listed on each coffee. Prices are confirmed by the shop at checkout.',
+            'Explore the collection and review your selections before checkout.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey, fontSize: 12),
           ),

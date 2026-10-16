@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 
 import 'core.dart';
 
-const espresso = Color(0xff553725),
-    sage = Color(0xff43513d),
-    cream = Color(0xfff7f2e9),
-    ink = Color(0xff34271f);
+const espresso = Color(0xff800000),
+    sage = Color(0xff9a5a54),
+    cream = Color(0xfff6e9db),
+    ink = Color(0xff4a3a2c),
+    floralGold = Color(0xffd0a068),
+    floralPaper = Color(0xfffff9f5);
+
 ThemeData coffeeTheme() => ThemeData(
   useMaterial3: true,
   fontFamily: 'Poppins',
@@ -13,36 +16,81 @@ ThemeData coffeeTheme() => ThemeData(
   colorScheme: ColorScheme.fromSeed(
     seedColor: espresso,
     primary: espresso,
-    secondary: sage,
-    surface: const Color(0xfffffcf6),
+    secondary: floralGold,
+    surface: floralPaper,
+    onSurface: ink,
   ),
   appBarTheme: const AppBarTheme(
     backgroundColor: cream,
-    foregroundColor: ink,
+    foregroundColor: espresso,
     centerTitle: false,
+    elevation: 0,
+    titleTextStyle: TextStyle(
+      fontFamily: 'Gilda',
+      fontSize: 27,
+      color: espresso,
+    ),
   ),
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
-    fillColor: const Color(0xfffffcf6),
+    fillColor: floralPaper.withValues(alpha: .94),
+    labelStyle: const TextStyle(color: ink),
+    hintStyle: const TextStyle(color: Color(0xff8d7a70), fontSize: 13),
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: const BorderSide(color: Color(0xffded3c4)),
+      borderRadius: BorderRadius.circular(25),
+      borderSide: const BorderSide(color: Color(0xffbda177), width: 1.4),
     ),
-    contentPadding: const EdgeInsets.all(16),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(25),
+      borderSide: const BorderSide(color: Color(0xffd9c4ac)),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(25),
+      borderSide: const BorderSide(color: espresso, width: 1.8),
+    ),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
   ),
   filledButtonTheme: FilledButtonThemeData(
     style: FilledButton.styleFrom(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 17),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      foregroundColor: Colors.white,
+      backgroundColor: espresso,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      textStyle: const TextStyle(fontWeight: FontWeight.w600, letterSpacing: .2),
+    ),
+  ),
+  outlinedButtonTheme: OutlinedButtonThemeData(
+    style: OutlinedButton.styleFrom(
+      foregroundColor: espresso,
+      side: const BorderSide(color: espresso, width: 1.2),
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
     ),
   ),
   cardTheme: CardThemeData(
-    elevation: 0,
-    color: const Color(0xfffffcf6),
+    elevation: 1,
+    shadowColor: const Color(0x1a4a3a2c),
+    color: floralPaper.withValues(alpha: .96),
+    margin: const EdgeInsets.symmetric(vertical: 7),
     shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(18),
-      side: const BorderSide(color: Color(0xffe6dccd)),
+      borderRadius: BorderRadius.circular(16),
+      side: const BorderSide(color: Color(0xffbda177), width: 1.1),
     ),
+  ),
+  navigationBarTheme: NavigationBarThemeData(
+    backgroundColor: floralPaper,
+    indicatorColor: const Color(0xffead8c7),
+    labelTextStyle: WidgetStateProperty.resolveWith((states) => TextStyle(
+      fontSize: 11,
+      fontWeight: states.contains(WidgetState.selected) ? FontWeight.w600 : FontWeight.w400,
+      color: states.contains(WidgetState.selected) ? espresso : ink,
+    )),
+  ),
+  navigationRailTheme: const NavigationRailThemeData(
+    backgroundColor: Color(0xfff6e9db),
+    selectedIconTheme: IconThemeData(color: espresso),
+    unselectedIconTheme: IconThemeData(color: Color(0xff987e70)),
+    selectedLabelTextStyle: TextStyle(color: espresso, fontWeight: FontWeight.w600),
   ),
 );
 void notice(BuildContext context, Object message) {
@@ -78,8 +126,13 @@ class CoffeeImage extends StatelessWidget {
     final path = '${product['image'] ?? product['img'] ?? ''}';
     final fallback = SizedBox(
       height: height,
-      child: const Center(
-        child: Icon(Icons.local_cafe_outlined, size: 48, color: espresso),
+      width: double.infinity,
+      child: Image.asset(
+        'assets/sampaguita/flower.png',
+        fit: fit,
+        errorBuilder: (_, e, s) => const Center(
+          child: Icon(Icons.local_florist_outlined, size: 48, color: espresso),
+        ),
       ),
     );
     final file = path.split('/').last;
@@ -132,7 +185,7 @@ class Heading extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'KAPE & CO.',
+          'SAMPAGUITA',
           style: TextStyle(
             letterSpacing: 3,
             fontSize: 10,
@@ -172,7 +225,7 @@ class EmptyState extends StatelessWidget {
     padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
     child: Column(
       children: [
-        const Icon(Icons.coffee_outlined, color: sage, size: 44),
+        const Icon(Icons.local_florist_outlined, color: espresso, size: 44),
         const SizedBox(height: 18),
         Text(
           title,

@@ -53,7 +53,7 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: Text(registering ? 'Create account' : 'Customer sign-in'),
+      title: Text(registering ? 'Create your account' : 'Welcome to Sampaguita'),
     ),
     body: Center(
       child: ConstrainedBox(
@@ -61,8 +61,14 @@ class _AuthScreenState extends State<AuthScreen> {
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Image.asset('assets/sampaguita/logo_a.png', height: 108, fit: BoxFit.contain),
+              ),
+            ),
             Heading(
-              registering ? 'Your coffee corner.' : 'Welcome back.',
+              registering ? 'A beautiful beginning.' : 'Welcome back.',
               registering
                   ? 'Create a customer account to order and follow your deliveries.'
                   : 'Sign in to continue to checkout. Your guest bag stays with you.',

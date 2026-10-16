@@ -25,7 +25,7 @@ class KapeApp extends StatelessWidget {
   const KapeApp({super.key, required this.store});
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: 'Kape & Co.',
+    title: 'Sampaguita',
     debugShowCheckedModeBanner: false,
     theme: coffeeTheme(),
     home: AnimatedBuilder(
@@ -51,9 +51,9 @@ class _HomeShellState extends State<HomeShell> {
     final store = widget.store;
     final destinations = [
       const NavigationDestination(
-        icon: Icon(Icons.coffee_outlined),
-        selectedIcon: Icon(Icons.coffee),
-        label: 'Menu',
+        icon: Icon(Icons.local_florist_outlined),
+        selectedIcon: Icon(Icons.local_florist),
+        label: 'Shop Here',
       ),
       const NavigationDestination(
         icon: Icon(Icons.favorite_border),
@@ -66,7 +66,7 @@ class _HomeShellState extends State<HomeShell> {
           label: Text('${store.count}'),
           child: const Icon(Icons.shopping_bag_outlined),
         ),
-        label: 'Bag',
+        label: 'Cart',
       ),
       const NavigationDestination(
         icon: Icon(Icons.receipt_long_outlined),
@@ -88,12 +88,13 @@ class _HomeShellState extends State<HomeShell> {
       appBar: AppBar(
         title: const Row(
           children: [
-            Icon(Icons.local_cafe_outlined, color: espresso),
-            SizedBox(width: 10),
-            Text(
-              'Kape & Co.',
-              style: TextStyle(fontFamily: 'Gilda', fontSize: 25),
+            SizedBox(
+              height: 42,
+              width: 54,
+              child: Image(image: AssetImage('assets/sampaguita/logo_a.png'), fit: BoxFit.contain),
             ),
+            SizedBox(width: 8),
+            Text('Sampaguita', style: TextStyle(fontFamily: 'Gilda', fontSize: 27, color: espresso)),
           ],
         ),
         actions: [
@@ -108,7 +109,12 @@ class _HomeShellState extends State<HomeShell> {
           const SizedBox(width: 10),
         ],
       ),
-      body: LayoutBuilder(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset('assets/sampaguita/background.png', fit: BoxFit.cover),
+          const ColoredBox(color: Color(0x33f6e9db)),
+          LayoutBuilder(
         builder: (context, constraints) => Row(
           children: [
             if (constraints.maxWidth >= 850)
@@ -150,6 +156,8 @@ class _HomeShellState extends State<HomeShell> {
             ),
           ],
         ),
+      ),
+        ],
       ),
       bottomNavigationBar: MediaQuery.sizeOf(context).width < 850
           ? NavigationBar(
