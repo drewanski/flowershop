@@ -5,6 +5,8 @@ const send = (res, result) => res.status(result.status || 200).json({
   message: result.message || 'Success.',
 });
 
+const createUser = async (req, res) => send(res, await AdminService.createUser(req.user, req.body));
+
 const listCustomers = async (req, res) => send(res, {
   payload: await AdminService.listCustomers(),
   message: 'Customers loaded.',
@@ -25,4 +27,4 @@ const listEmployeeLogs = async (req, res) => send(res, {
   message: 'Employee logs loaded.',
 });
 
-module.exports = { listCustomers, updateCustomer, deleteCustomer, listEmployeeLogs };
+module.exports = { createUser, listCustomers, updateCustomer, deleteCustomer, listEmployeeLogs };

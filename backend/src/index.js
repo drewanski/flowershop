@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const routes = require('./routes');
 const { apiLimiter } = require('./middlewares/RateLimitMiddleware');
 const PaymentController = require('./controllers/PaymentController');
+const { bootstrapAdminIfMissing } = require('./services/BootstrapAdminService');
 
 //===============//
 // DOTENV CONFIG //
@@ -54,8 +55,9 @@ if (NODE_ENV === 'development') {
 // CONNECT TO MONGODB //
 //====================//
 
-mongoose.connect(MONGODB_URI).then(() => {
+mongoose.connect(MONGODB_URI).then(async () => {
   console.log('Connected to MongoDB');
+  await bootstrapAdminIfMissing();
   startServer();
 }).catch((error) => {
   console.error('Error connecting to MongoDB:', error);

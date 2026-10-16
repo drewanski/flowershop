@@ -4,6 +4,7 @@ const { requireToken, requireManagement } = require('../middlewares/AuthMiddlewa
 
 const router = express.Router();
 router.use(requireToken, requireManagement);
+router.post('/users', AdminController.createUser);
 router.get('/customers', AdminController.listCustomers);
 router.patch('/customers/:id', AdminController.updateCustomer);
 router.delete('/customers/:id', AdminController.deleteCustomer);
